@@ -3,6 +3,14 @@
 #include <OpenMesh/Core/Utils/Endian.hh>
 #include "ppmesh.hh"
 #include "huffman.hh"
+
+//#define DEBUGGING
+#ifdef DEBUGGING
+#define DEBUG(x) std::cerr<<(x)<<std::endl;
+#else
+#define DEBUG(x)
+#endif
+static const char MAGIC_WORD[] = "PPMESH";
 static const unsigned int MAX_NEIGHBORS = 1000;
 
 //Dequantize the difference
@@ -45,6 +53,39 @@ Ppmesh::~Ppmesh()
 
 void
 Ppmesh::readBase(std::istream& ifs)
+{
+    read_base_mesh(ifs);
+    //DEBUG("base mesh read.");
+
+    bool swap = OpenMesh::Endian::local() != OpenMesh::Endian::LSB;
+    read_huffman_tree(ifs, id_tree_);
+
+
+    OpenMesh::IO::binary<bool>::restore(ifs, tree1Exist_, swap);
+    if (tree1Exist_)
+    {
+        read_huffman_tree(ifs, geometry_tree1_);
+
+    }
+
+    OpenMesh::IO::binary<bool>::restore(ifs, tree2Exist_, swap);
+    if (tree2Exist_)
+    {
+        read_huffman_tree(ifs, geometry_tree2_);
+    }
+        
+    id_coder_ = new Huffman::HuffmanCoder<unsigned int>(id_tree_);
+    if (tree1Exist_)
+    {
+            geometry_coder1_ = new Huffman::HuffmanCoder<int>(geometry_tree1_);
+    }
+    if (tree2Exist_)
+    {
+            geometry_coder2_ = new Huffman::HuffmanCoder<int>(geometry_tree2_);
+    }
+}
+
+void Ppmesh::readPM(std::istream& ifs)
 {
     MyMesh::Point  p;
     unsigned int   i, i0, i1, i2;
@@ -108,8 +149,47 @@ Ppmesh::readBase(std::istream& ifs)
                        mesh_.vertex_handle(i1),
                        mesh_.vertex_handle(i2));
     }
+#ifdef DEBUGGING
+    std::cerr << mesh_.n_vertices() << " vertices, "
+    << mesh_.n_edges()    << " edge, "
+    << mesh_.n_faces()    << " faces, "
+    << n_detail_vertices_ << " detail vertices\n";
     return;
+#endif
 }
+
+void Ppmesh::read_base_mesh(std::istream& ifs)
+{
+    bool swap = OpenMesh::Endian::local() != OpenMesh::Endian::LSB;
+    //flag
+    char buffer[255];
+    ifs.read(buffer, sizeof(MAGIC_WORD)-1);	//check a key word at the beginning of the file. Here "PPMESH"
+    buffer[sizeof(MAGIC_WORD)-1] = '\0';
+    if (std::string(buffer) != MAGIC_WORD)
+    {
+        throw WrongFileFormat();
+    }
+
+    //read level0, level1, tree_bits_
+    OpenMesh::IO::binary<unsigned int>::restore(ifs, level0_, swap);
+    OpenMesh::IO::binary<unsigned int>::restore(ifs, level1_, swap);
+    OpenMesh::IO::binary<unsigned int>::restore(ifs, tree_bits_, swap);
+
+    //read minimum_depth_
+    OpenMesh::IO::binary<unsigned int>::restore(ifs, minimum_depth_, swap);
+
+    //write quantize_bits_, x_max, x_min, y_max, y_min, z_max, z_min
+    OpenMesh::IO::binary<unsigned int>::restore(ifs, quantize_bits_, swap);
+    OpenMesh::IO::binary<double>::restore(ifs, x_max_, swap);
+    OpenMesh::IO::binary<double>::restore(ifs, x_min_, swap);
+    OpenMesh::IO::binary<double>::restore(ifs, y_max_, swap);
+    OpenMesh::IO::binary<double>::restore(ifs, y_min_, swap);
+    OpenMesh::IO::binary<double>::restore(ifs, z_max_, swap);
+    OpenMesh::IO::binary<double>::restore(ifs, z_min_, swap);
+
+    readPM(ifs);
+}
+
 
 unsigned int Ppmesh::id2level(VertexID id) const
 {
@@ -155,7 +235,10 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     unsigned int code_l = value_array[0];
     unsigned int code_r = value_array[1];
 
-    //DEBUG("code decoded");
+    DEBUG("code decoded");
+    DEBUG(code_l);
+    DEBUG(code_r);
+    DEBUG(level);
     int dx = 0;
     int dy = 0;
     int dz = 0;
@@ -195,7 +278,11 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
         dz = geometry_array[2];
     }
 
-    //DEBUG("geometry decoded");
+    DEBUG("geometry decoded");
+    DEBUG(dx);
+    DEBUG(dy);
+    DEBUG(dz);
+        
     splitInfo* split = new splitInfo();
     split->id = id;
     split->code_l = code_l;
@@ -247,44 +334,65 @@ void    Ppmesh::output_arrays(std::vector<Vertex>& vertex_array, std::vector<Fac
         return;
 }
 
-void   Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_set, std::set<FaceIndex> face_set)
+void   Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::set<FaceAndIndex>& face_and_index_set)
 {
     vertices = new_vertices_;
     faces    = new_faces_;
-    face_set = affected_faces_;
+    face_and_index_set = affected_face_and_indices_;
     
     //set of vertices in affected_faces_
-    std::set<FaceIndex>::const_iterator it = affected_faces_.begin();
-    std::set<FaceIndex>::const_iterator end = affected_faces_.end();
+    std::set<FaceAndIndex>::const_iterator it = affected_face_and_indices_.begin();
+    std::set<FaceAndIndex>::const_iterator end = affected_face_and_indices_.end();
     for(; it != end; ++it)
     {
-        MyMesh::FaceHandle fh(*it);
+        MyMesh::FaceHandle fh(it->index);
         MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
         while(fv_it)
         {
-            affected_vertices_.insert(static_cast<VertexIndex>(fv_it.handle().idx()));
+            affected_vertex_indices_.insert(static_cast<VertexIndex>(fv_it.handle().idx()));
+            ++fv_it;
         }
     }
-    vertex_set = affected_vertices_;
+    vertex_index_set = affected_vertex_indices_;
 
     new_vertices_.clear();
     new_faces_.clear();
-    affected_vertices_.clear();
-    affected_faces_.clear();
+    affected_vertex_indices_.clear();
+    affected_face_and_indices_.clear();
+}
+
+//from a face handle to Face
+inline FaceAndIndex Ppmesh::fh_2_face_and_index(MyMesh::FaceHandle fh)
+{
+    MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
+    VertexIndex fv[3] = {0, 0, 0};
+    int         index = 0;
+    while(fv_it)
+    {
+        fv[index] = static_cast<VertexIndex>(fv_it.handle().idx());
+        ++fv_it;
+        ++index;
+    }
+    return FaceAndIndex(fh.idx(), Face(fv[0], fv[1], fv[2]));
 }
 
 bool Ppmesh::splitVs(splitInfo* split, bool temp)
 {
-    //std::cerr<<"split "<<split->id<<std::endl;
+    DEBUG("split");
+    DEBUG(split->id);
+
     //MyMesh::VertexHandle v1 = split->v;
     MyMesh::VertexHandle v1 = map_[split->id].v;
-    //std::cerr<<mesh_.deref(v1).id<<" "<<split->id<<std::endl;
+    DEBUG(mesh_.deref(v1).id);
     assert(mesh_.deref(v1).id == split->id);
 
     MyMesh::Point p1 = mesh_.point(v1);
     double x1 = p1[0];
     double y1 = p1[1];
     double z1 = p1[2];
+    DEBUG(x1);
+    DEBUG(y1);
+    DEBUG(z1);
 
     std::vector<VertexID> neighbors;
     one_ring_neighbor(v1, neighbors);
@@ -352,6 +460,8 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
         vsinfo.code_remain_r = code_remain;
 
     }
+    DEBUG(id_l);
+    DEBUG(id_r);
 
     if (id_l == id_r)
     {
@@ -366,13 +476,18 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     double x0 = x1 + de_quantize_d(split->dx, x_max_, x_min_, quantize_bits_);
     double y0 = y1 + de_quantize_d(split->dy, y_max_, y_min_, quantize_bits_);
     double z0 = z1 + de_quantize_d(split->dz, z_max_, z_min_, quantize_bits_);
+    DEBUG(x0);
+    DEBUG(y0);
+    DEBUG(z0);
 
     MyMesh::Point p0(x0, y0, z0);
     MyMesh::VertexHandle v0 = mesh_.add_vertex(p0);
 
     unsigned int old_face_number = mesh_.n_faces();
+    DEBUG(old_face_number);
     mesh_.vertex_split(v0, v1, vl, vr);
     unsigned int curr_face_number = mesh_.n_faces();
+    DEBUG(curr_face_number);
     
     delete split;
     split = 0;
@@ -391,7 +506,8 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     MyMesh::ConstVertexFaceIter vf_it(mesh_, v0);
     while(vf_it)
     {
-        affected_faces_.insert(static_cast<FaceIndex>(vf_it.handle().idx()));
+        affected_face_and_indices_.insert(fh_2_face_and_index(vf_it.handle()));
+        ++vf_it;
     }
 
     for (unsigned int i = old_face_number; i < curr_face_number; i++)
@@ -403,6 +519,8 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
         while(fv_it)
         {
             fv[index] = static_cast<VertexIndex>(fv_it.handle().idx());
+            ++fv_it;
+            ++index;
         }
         Face f(fv[0], fv[1], fv[2]);
         new_faces_.push_back(f);

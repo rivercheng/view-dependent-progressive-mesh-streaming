@@ -10,6 +10,7 @@
 #include <set>
 #include <OpenMesh/Core/Mesh/Types/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Attributes/Attributes.hh>
+#include <OpenMesh/Core/Utils/Endian.hh>
 #include "common_def.hh"
 #include "bitstring.hh"
 #include "huffman.hh"
@@ -60,7 +61,7 @@ class Ppmesh
     /**
      * Return new vertices, new faces, affected vertices, and affected faces after last updated_info.
      */
-    void    updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_set, std::set<FaceIndex> face_set);
+    void  updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::set<FaceAndIndex>& face_and_index_set);
 
 
     private: //parameters
@@ -158,6 +159,12 @@ class Ppmesh
     double            y_max_;
     double            z_max_;
     
+    Huffman::DecodeTree<unsigned int>   id_tree_;
+    bool                                tree1Exist_;
+    bool                                tree2Exist_;
+    Huffman::DecodeTree<int>            geometry_tree1_;
+    Huffman::DecodeTree<int>            geometry_tree2_;
+    
     Huffman::HuffmanCoder<unsigned int>*  id_coder_;
     Huffman::HuffmanCoder<int>         *  geometry_coder1_;
     Huffman::HuffmanCoder<int>         *  geometry_coder2_;
@@ -167,15 +174,37 @@ class Ppmesh
     FaceIndex                          last_face_index_;
     std::vector<Vertex>                new_vertices_;
     std::vector<Face>                  new_faces_;
-    std::set<VertexIndex>              affected_vertices_;
-    std::set<FaceIndex>                affected_faces_;
+    std::set<VertexIndex>              affected_vertex_indices_;
+    std::set<FaceAndIndex>             affected_face_and_indices_;
     
     private: //functions
-    void    readBase(std::istream& ifs);
+    void         readBase(std::istream& ifs);
     unsigned int id2level(VertexID id) const;
     bool         splitVs(splitInfo* split, bool temp=false);
     size_t       one_ring_neighbor(const MyMesh::VertexHandle& v1, std::vector<VertexID>& neighbors) const;
     size_t       code2id(const std::vector<VertexID>&id_array, unsigned int code, std::vector<VertexID>& result_array, unsigned int* p_code_remain, size_t pos=0) const;
     VertexID     further_split(std::vector<VertexID>& neighbors, VertexID id, size_t pos, Side side, bool temp = false);
+    void         read_base_mesh(std::istream& ifs);
+    void         readPM(std::istream& ifs);
+    FaceAndIndex fh_2_face_and_index(MyMesh::FaceHandle fh);
+
+    template <typename T>
+    void read_huffman_tree(std::istream& ifs, Huffman::DecodeTree<T>& tree)
+    {
+        bool swap = OpenMesh::Endian::local() != OpenMesh::Endian::LSB;
+
+        unsigned int tree_str_len;
+        OpenMesh::IO::binary<unsigned int>::restore(ifs, tree_str_len, swap);
+        tree.tree_str.read_binary(ifs, tree_str_len);
+
+        unsigned int value_array_len;
+        OpenMesh::IO::binary<unsigned int>::restore(ifs, value_array_len, swap);
+        for (size_t i = 0; i<value_array_len; ++i)
+        {
+            T value;
+            OpenMesh::IO::binary<T>::restore(ifs, value, swap);
+            tree.value_array.push_back(value);
+        }
+    }
 };
 #endif

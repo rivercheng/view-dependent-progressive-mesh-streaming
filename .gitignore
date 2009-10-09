@@ -2,3 +2,6 @@
 *.bak
 *.swp
 *.swo
+*.base
+test_ppmesh
+output

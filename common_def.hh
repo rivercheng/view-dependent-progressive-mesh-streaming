@@ -1,11 +1,14 @@
 #ifndef __COMMON_DEF_HH__
 #define __COMMON_DEF_HH__
+#include <iostream>
 typedef double Coordinate;
 typedef int    VertexIndex;
 typedef int    FaceIndex;
 
+
 struct Vertex
 {
+    //friend std::ostream& operator<<(std::ostream ofs, const Vertex& v);
     Coordinate x;
     Coordinate y;
     Coordinate z;
@@ -19,5 +22,17 @@ struct Face
     VertexIndex v3;
     Face(VertexIndex v1_, VertexIndex v2_, VertexIndex v3_):v1(v1_), v2(v2_), v3(v3_){;}
 };
+
+struct FaceAndIndex
+{
+    FaceIndex index;
+    Face      f;
+    FaceAndIndex(FaceIndex i, Face f_):index(i), f(f_){;}
+};
+
+std::ostream& operator<<(std::ostream& ofs, const Vertex& v);
+std::ostream& operator<<(std::ostream& ofs, const Face& f);
+std::ostream& operator<<(std::ostream& ofs, const FaceAndIndex& f);
+bool operator<(const FaceAndIndex& fi1, const FaceAndIndex& fi2);
 #endif
 
