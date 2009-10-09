@@ -24,7 +24,7 @@ static double de_quantize_d(int value, double max, double min, unsigned int quan
     return d_val;
 }
 
-Ppmesh::Ppmesh(int quantize_bits)
+Ppmesh::Ppmesh(std::istream& ifs, int quantize_bits)
         :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0),\
         n_max_vertices_(0), tree_bits_(0), levels_(0), \
         quantize_bits_(quantize_bits), level0_(0), level1_(9),\
@@ -32,7 +32,8 @@ Ppmesh::Ppmesh(int quantize_bits)
         id_coder_(0),\
         geometry_coder1_(0), geometry_coder2_(0) 
 {
-    ;
+    assert(ifs);
+    readBase(ifs);
 }
 
 Ppmesh::~Ppmesh()
@@ -43,11 +44,10 @@ Ppmesh::~Ppmesh()
 }
 
 void
-Ppmesh::readPM(std::istream& ifs, bool readDetail)
+Ppmesh::readBase(std::istream& ifs)
 {
     MyMesh::Point  p;
     unsigned int   i, i0, i1, i2;
-    unsigned int   v1, vl, vr;
     char           c[10];
 
     bool swap = OpenMesh::Endian::local() != OpenMesh::Endian::LSB;
@@ -108,33 +108,7 @@ Ppmesh::readPM(std::istream& ifs, bool readDetail)
                        mesh_.vertex_handle(i1),
                        mesh_.vertex_handle(i2));
     }
-
-    if (!readDetail)
-    {
-        return;
-    }
-    // load progressive detail
-    for (i=0; i<n_detail_vertices_; ++i)
-    {
-        OpenMesh::IO::binary<MyMesh::Point>::restore( ifs, p, swap );
-        OpenMesh::IO::binary<unsigned int>::restore( ifs, v1, swap );
-        OpenMesh::IO::binary<unsigned int>::restore( ifs, vl, swap );
-        OpenMesh::IO::binary<unsigned int>::restore( ifs, vr, swap );
-
-        PMInfo pminfo;
-        pminfo.p0 = p;
-        pminfo.v1 = MyMesh::VertexHandle(v1);
-        pminfo.vl = MyMesh::VertexHandle(vl);
-        pminfo.vr = MyMesh::VertexHandle(vr);
-        pminfos_.push_back(pminfo);
-    }
-    pmiter_ = pminfos_.begin();
-
-    // info
-    std::cerr << mesh_.n_vertices() << " vertices, "
-    << mesh_.n_edges()    << " edge, "
-    << mesh_.n_faces()    << " faces, "
-    << n_detail_vertices_ << " detail vertices\n";
+    return;
 }
 
 unsigned int Ppmesh::id2level(VertexID id) const
@@ -185,6 +159,9 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     int dx = 0;
     int dy = 0;
     int dz = 0;
+    // level < level0_, dx, dy, dz are not compressed
+    // level0_ <= level < level1_, dx, dy, dz are compressed with the first huffman table
+    // level >= level1_, dx, dy, dz are compressed with the second huffman table
     if (level < level0_)
     {
         BitString bs1 = data.substr(*p_pos, 12);
@@ -227,43 +204,90 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     split->dy = dy;
     split->dz = dz;
 
-    if (map_.find(id) == map_.end()) //vertex does not exist.
+    //if the parent vertex is not split yet, then this vertex does not exist.
+    //We put this vertex split in the waiting list of its parent vertex
+    if (map_.find(id) == map_.end()) 
     {
         map_[id>>1].waiting_list.push_back(split);
         return false;
     }
     else
     {
-        return splitVs(split, temp);
+        bool result = splitVs(split, temp);
+        if (result)
+        {
+            //update the patches
+        }
+        return result;
     }
 }
-
-/*void    Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::vector<VertexIndex>& vertex_array, std::vector<FaceIndex> face_array) const
+    
+void    Ppmesh::output_arrays(std::vector<Vertex>& vertex_array, std::vector<Face>& face_array) const
 {
-    ;
-}*/
+        MyMesh::ConstVertexIter v_it(mesh_.vertices_begin());
+        MyMesh::ConstVertexIter v_end(mesh_.vertices_end());
+        for (; v_it != v_end; ++v_it)
+        {
+            MyMesh::Point p = mesh_.point(v_it);
+            Vertex v(p[0], p[1], p[2]);
+            vertex_array.push_back(v);
+        }
+
+        MyMesh::ConstFaceIter f_it(mesh_.faces_begin());
+        MyMesh::ConstFaceIter f_end(mesh_.faces_end());
+        for ( ; f_it != f_end; ++f_it)
+        {
+            MyMesh::ConstFaceVertexIter fv_it(mesh_, f_it.handle());
+            VertexIndex v_idx1 = (fv_it.handle()).idx();
+            VertexIndex v_idx2 = ((++fv_it).handle()).idx();
+            VertexIndex v_idx3 = ((++fv_it).handle()).idx();
+            Face f(v_idx1, v_idx2, v_idx3);
+            face_array.push_back(f);
+        }
+        return;
+}
+
+void   Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_set, std::set<FaceIndex> face_set)
+{
+    vertices = new_vertices_;
+    faces    = new_faces_;
+    face_set = affected_faces_;
+    
+    //set of vertices in affected_faces_
+    std::set<FaceIndex>::const_iterator it = affected_faces_.begin();
+    std::set<FaceIndex>::const_iterator end = affected_faces_.end();
+    for(; it != end; ++it)
+    {
+        MyMesh::FaceHandle fh(*it);
+        MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
+        while(fv_it)
+        {
+            affected_vertices_.insert(static_cast<VertexIndex>(fv_it.handle().idx()));
+        }
+    }
+    vertex_set = affected_vertices_;
+
+    new_vertices_.clear();
+    new_faces_.clear();
+    affected_vertices_.clear();
+    affected_faces_.clear();
+}
 
 bool Ppmesh::splitVs(splitInfo* split, bool temp)
 {
-    PMInfo pminfo;
-    pminfo.id = split->id;
     //std::cerr<<"split "<<split->id<<std::endl;
     //MyMesh::VertexHandle v1 = split->v;
     MyMesh::VertexHandle v1 = map_[split->id].v;
     //std::cerr<<mesh_.deref(v1).id<<" "<<split->id<<std::endl;
     assert(mesh_.deref(v1).id == split->id);
-    //Logger log;
 
     MyMesh::Point p1 = mesh_.point(v1);
     double x1 = p1[0];
     double y1 = p1[1];
     double z1 = p1[2];
-    //double x1 = split->x1;
-    //double y1 = split->y1;
-    //double z1 = split->z1;
 
     std::vector<VertexID> neighbors;
-    pminfo.neighbor_number = one_ring_neighbor(v1, neighbors);
+    one_ring_neighbor(v1, neighbors);
 
     unsigned int pos = 0;
     std::vector<VertexID> results;
@@ -277,8 +301,7 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     VertexID             o_id_l = 0;
     VertexID             o_id_r = 0;
     VsInfo&              vsinfo = map_[id];
-    //try
-    //{
+    
     if (code_l != 0)
     {
         unsigned int code_remain = 1;
@@ -302,12 +325,8 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
         vsinfo.id_l = o_id_l;
         vsinfo.code_remain_l = code_remain;
     }
-    else
-    {
-        //it means no vl exist.
-        //we just keep vl as the default value(-1).
-        ;
-    }
+    //else it means no vl exist.
+    //we just keep vl as the default value(-1).
 
     if (code_r != 0)
     {
@@ -344,36 +363,50 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
         }
         return false;
     }
-    //}
-    //catch(DecodeError& e)
-    //{
-    //    map_[neighbors[0]].waiting_list.push_back(split);
-    //    return false;
-    //}
     double x0 = x1 + de_quantize_d(split->dx, x_max_, x_min_, quantize_bits_);
     double y0 = y1 + de_quantize_d(split->dy, y_max_, y_min_, quantize_bits_);
     double z0 = z1 + de_quantize_d(split->dz, z_max_, z_min_, quantize_bits_);
 
     MyMesh::Point p0(x0, y0, z0);
-    pminfo.p0 = p0;
-    pminfo.v0 = mesh_.add_vertex(pminfo.p0);
-    pminfo.v1 = v1;
-    pminfo.vl = vl;
-    pminfo.vr = vr;
-    pminfos_.push_back(pminfo);
-    pmiter_ = pminfos_.end();
+    MyMesh::VertexHandle v0 = mesh_.add_vertex(p0);
 
-    mesh_.vertex_split(pminfo.v0, pminfo.v1, pminfo.vl, pminfo.vr);
+    unsigned int old_face_number = mesh_.n_faces();
+    mesh_.vertex_split(v0, v1, vl, vr);
+    unsigned int curr_face_number = mesh_.n_faces();
+    
     delete split;
-    //split = 0;
+    split = 0;
     
     VertexID id0 = (id << 1) + 1;
     VertexID id1 = (id << 1);
-    mesh_.deref(pminfo.v0).id = id0;
-    mesh_.deref(pminfo.v1).id = id1;
-    map_[id0].v = pminfo.v0;
-    map_[id1].v = pminfo.v1;
+    mesh_.deref(v0).id = id0;
+    mesh_.deref(v1).id = id1;
+    map_[id0].v = v0;
+    map_[id1].v = v1;
 
+    //collect the information of which vertices and faces are added.
+    Vertex v(x0, y0, z0);
+    new_vertices_.push_back(v);
+
+    MyMesh::ConstVertexFaceIter vf_it(mesh_, v0);
+    while(vf_it)
+    {
+        affected_faces_.insert(static_cast<FaceIndex>(vf_it.handle().idx()));
+    }
+
+    for (unsigned int i = old_face_number; i < curr_face_number; i++)
+    {
+        MyMesh::FaceHandle fh(i);
+        MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
+        VertexIndex fv[3] = {0, 0, 0};
+        int         index = 0;
+        while(fv_it)
+        {
+            fv[index] = static_cast<VertexIndex>(fv_it.handle().idx());
+        }
+        Face f(fv[0], fv[1], fv[2]);
+        new_faces_.push_back(f);
+    }
     if (!temp)
     {
         //split the vertice splits in the waiting list

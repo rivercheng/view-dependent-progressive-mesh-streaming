@@ -22,22 +22,17 @@ class BitString;
 class Ppmesh
 {
     public:
-    Ppmesh(int quantize_bits = 14);
+    Ppmesh(std::istream& ifs, int quantize_bits = 14);
     virtual ~Ppmesh(void);
     
-    /**
-     * read content from a .pm file (OpenMesh file).
-     * The ppmesh needs to be empty.
-     */
-    void    readPM(std::istream& ifs, bool readDetail = true);
     
     /**
      * to decode a vertex id from given position of a given bitstring, 
      * In most cases, please let temp be false.
      * Return ture if this vertex split can be done. return false
      * if this vertex split has to wait for parents. It will be done
-     * when the parent vertex split is done without further request.
-     * The pos will be updated to next untouched bit in the data.
+     * immediately when the parent vertex split is done.
+     * The pos will be updated to next unvisited bit in the data.
      */
     bool    decode(VertexID id, const BitString& data, size_t* p_pos, bool temp = false);
     
@@ -60,12 +55,12 @@ class Ppmesh
     /**
      * output all the vertices and faces in the ppmesh to vertex_array and face_array.
      */
-    void    output_arrays(std::vector<VertexIndex>& vertex_array, std::vector<FaceIndex>& face_array) const;
+    void    output_arrays(std::vector<Vertex>& vertex_array, std::vector<Face>& face_array) const;
 
     /**
      * Return new vertices, new faces, affected vertices, and affected faces after last updated_info.
      */
-    void    updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::vector<VertexIndex>& vertex_array, std::vector<FaceIndex> face_array) const;
+    void    updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_set, std::set<FaceIndex> face_set);
 
 
     private: //parameters
@@ -97,7 +92,11 @@ class Ppmesh
     Ppmesh(const Ppmesh&);
     Ppmesh& operator=(const Ppmesh&);
 
-    MyMesh mesh_;
+    enum Side {LEFT, RIGHT};
+    class InvalidID {};
+    class DecodeError {};
+    class NoDecoder {};
+    class WrongFileFormat{};
 
     struct splitInfo
     {
@@ -105,33 +104,26 @@ class Ppmesh
         VertexID                   id;
         unsigned int           code_l;
         unsigned int           code_r;
-        int               dx;
-        int               dy;
-        int               dz;
-        double             x1;
-        double             y1;
-        double             z1;
+        int                        dx;
+        int                        dy;
+        int                        dz;
+        double                     x1;
+        double                     y1;
+        double                     z1;
     };
-    class VsInfo
+    
+    struct VsInfo
     {
-    public:
         MyMesh::VertexHandle       v;
-        BitString               data;
         VertexID                id_l;
         VertexID                id_r;
         unsigned int            code_remain_l;
         unsigned int            code_remain_r;
-        size_t                  pminfo_index;
         std::vector<splitInfo*> waiting_list;
-        //std::vector<BitString>  data_waiting_list;
-        size_t                  pos_in_vertex_front;
-        bool                    isPicked;
-        bool                    isReceived;
-        bool                    isVisible;
         bool                    isLeaf;
         VsInfo()
                 :id_l(0), id_r(0), code_remain_l(1), code_remain_r(1), \
-                isPicked(false), isReceived(false), isVisible(true), isLeaf(false)
+                isLeaf(false)
         {
             ;
         }
@@ -139,7 +131,7 @@ class Ppmesh
         {
             for (size_t i = 0; i<waiting_list.size(); i++)
             {
-                if (waiting_list[i]) delete waiting_list[i];
+                delete waiting_list[i];
                 waiting_list[i] = 0;
             }
         }
@@ -147,7 +139,9 @@ class Ppmesh
     typedef std::map<VertexID, VsInfo>          Map;
     typedef Map::iterator                       MapIter;
     typedef Map::const_iterator                 MapConstIter;
+    
     Map               map_;
+    MyMesh            mesh_;
     
     size_t            n_base_vertices_, n_base_faces_, n_detail_vertices_;
     size_t            n_max_vertices_;
@@ -167,45 +161,21 @@ class Ppmesh
     Huffman::HuffmanCoder<unsigned int>*  id_coder_;
     Huffman::HuffmanCoder<int>         *  geometry_coder1_;
     Huffman::HuffmanCoder<int>         *  geometry_coder2_;
-    
-    struct PMInfo
-    {
-        VertexID             id;
-        MyMesh::Point        p0;
-        MyMesh::VertexHandle v0, v1, vl, vr;
-        unsigned int         level;
-
-        //for stat information only
-        unsigned int         neighbor_number;
-        unsigned int         connectivity_len;
-        unsigned int         geometry_len;
-        PMInfo()
-                :id(0), p0(0,0,0), v0(0), v1(0), vl(0), vr(0),level(0),\
-                neighbor_number(0), connectivity_len(0), geometry_len(0)
-        {
-            ;
-        }
-    };
-    typedef std::vector<PMInfo>                 PMInfoContainer;
-    typedef PMInfoContainer::iterator           PMInfoIter;
-    typedef PMInfoContainer::const_iterator     PMInfoConstIter;
-    PMInfoContainer   pminfos_;
-    PMInfoIter        pmiter_;
-    
-    enum Side {LEFT, RIGHT};
-    class InvalidID {};
-    class DecodeError {};
-    class NoDecoder {};
-    class WrongFileFormat{};
-    
     std::set<VertexID>                 to_be_split_;
+
+    VertexIndex                        last_vertex_index_;
+    FaceIndex                          last_face_index_;
+    std::vector<Vertex>                new_vertices_;
+    std::vector<Face>                  new_faces_;
+    std::set<VertexIndex>              affected_vertices_;
+    std::set<FaceIndex>                affected_faces_;
     
     private: //functions
+    void    readBase(std::istream& ifs);
     unsigned int id2level(VertexID id) const;
     bool         splitVs(splitInfo* split, bool temp=false);
     size_t       one_ring_neighbor(const MyMesh::VertexHandle& v1, std::vector<VertexID>& neighbors) const;
-    size_t code2id(const std::vector<VertexID>&id_array, unsigned int code, std::vector<VertexID>& result_array, unsigned int* p_code_remain, size_t pos=0) const;
-    VertexID          further_split(std::vector<VertexID>& neighbors, VertexID id, size_t pos, Side side, bool temp = false);
-    
+    size_t       code2id(const std::vector<VertexID>&id_array, unsigned int code, std::vector<VertexID>& result_array, unsigned int* p_code_remain, size_t pos=0) const;
+    VertexID     further_split(std::vector<VertexID>& neighbors, VertexID id, size_t pos, Side side, bool temp = false);
 };
 #endif
