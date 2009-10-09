@@ -229,6 +229,7 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     }
 
     std::vector<unsigned int> value_array;
+    //std::vector<unsigned int> value_array;
     size_t number = 0;
     number = id_coder_->decode(data, value_array, p_pos, 2);
     assert(number == 2);
@@ -395,10 +396,12 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     DEBUG(z1);
 
     std::vector<VertexID> neighbors;
+    neighbors.reserve(50);
     one_ring_neighbor(v1, neighbors);
 
     unsigned int pos = 0;
     std::vector<VertexID> results;
+    results.reserve(50);
     MyMesh::VertexHandle vl;
     MyMesh::VertexHandle vr;
     unsigned int         code_l = split->code_l;

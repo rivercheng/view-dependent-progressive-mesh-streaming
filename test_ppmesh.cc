@@ -44,9 +44,10 @@ int main(int argc, char** argv)
             //std::cerr<<"to decode "<<id<<" with "<<data<<std::endl;
             mesh.decode(id, data,&p_pos);
             //std::cerr<<i<<std::endl;
-            /*
             std::vector<Vertex> vertices;
             std::vector<Face>   faces;
+            vertices.reserve(10);
+            faces.reserve(10);
             std::set<VertexIndex> vertex_set;
             std::set<FaceAndIndex>   face_and_index_set;
             mesh.updated_info(vertices, faces, vertex_set, face_and_index_set);
@@ -63,7 +64,6 @@ int main(int argc, char** argv)
             std::for_each(face_and_index_set.begin(), face_and_index_set.end(), print<FaceAndIndex>);
             std::cout<<"\n";
             std::cout<<"\n";
-            */
         }
         ifs.close();  					//reconstitution of the poor progressive mesh complete
     return 0;

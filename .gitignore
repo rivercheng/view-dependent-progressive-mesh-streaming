@@ -5,3 +5,5 @@
 *.base
 test_ppmesh
 output
+temp
+tmp
