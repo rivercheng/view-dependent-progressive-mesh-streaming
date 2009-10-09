@@ -84,6 +84,18 @@ Ppmesh::readBase(std::istream& ifs)
             geometry_coder2_ = new Huffman::HuffmanCoder<int>(geometry_tree2_);
     }
 }
+    
+void Ppmesh::vertex_faces(VertexIndex vertex_index, std::vector<FaceIndex>& face_array) const
+{
+        MyMesh::VertexHandle v(vertex_index);
+        MyMesh::ConstVertexFaceIter vf_it(mesh_, v);
+        while (vf_it)
+        {
+            face_array.push_back(static_cast<FaceIndex>(vf_it.handle().idx()));
+            ++vf_it;
+        }
+        return;
+}
 
 void Ppmesh::readPM(std::istream& ifs)
 {

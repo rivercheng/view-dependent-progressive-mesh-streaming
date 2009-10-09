@@ -2,9 +2,9 @@
 #define __COMMON_DEF_HH__
 #include <iostream>
 typedef double Coordinate;
-typedef int    VertexIndex;
-typedef int    FaceIndex;
-
+typedef unsigned int    VertexIndex;
+typedef unsigned int    FaceIndex;
+typedef double Normalf;
 
 struct Vertex
 {
@@ -28,6 +28,14 @@ struct FaceAndIndex
     FaceIndex index;
     Face      f;
     FaceAndIndex(FaceIndex i, Face f_):index(i), f(f_){;}
+};
+
+struct NormalValue
+{
+    Normalf nxy;
+    Normalf nyz;
+    Normalf nzx;
+    NormalValue(Normalf xy, Normalf yz, Normalf zx): nxy(xy), nyz(yz), nzx(zx){;}
 };
 
 std::ostream& operator<<(std::ostream& ofs, const Vertex& v);

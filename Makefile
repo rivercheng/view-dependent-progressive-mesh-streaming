@@ -1,8 +1,8 @@
 LIBRARY = -lOpenMesh_Core -lOpenMesh_Tools -lPocoFoundation -lPocoNet -lPocoUtil -lglut #-lprofiler	
 OPTIONS =  -Wall -W -Wextra -g -O2 
 CC = g++
-ALL = ppmesh.o bitstring.o vertexid.o test_ppmesh
-OBJ = ppmesh.o bitstring.o vertexid.o common_def.o
+ALL = ppmesh.o bitstring.o vertexid.o test_ppmesh gfmesh.o
+OBJ = ppmesh.o bitstring.o vertexid.o common_def.o gfmesh.o
 
 all: $(ALL)
 tags: *.cc *.hh
