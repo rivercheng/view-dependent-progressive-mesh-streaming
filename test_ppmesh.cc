@@ -49,8 +49,9 @@ int main(int argc, char** argv)
             vertices.reserve(10);
             faces.reserve(10);
             std::set<VertexIndex> vertex_set;
-            std::set<FaceAndIndex>   face_and_index_set;
-            mesh.updated_info(vertices, faces, vertex_set, face_and_index_set);
+            std::map<FaceIndex, Face>   face_map;
+            mesh.updated_info(vertices, faces, vertex_set, face_map);
+            std::cout<<i+1024<<"\n";
             std::cout<<"new vertices"<<"\n";
             std::for_each(vertices.begin(), vertices.end(), print<Vertex>);
             std::cout<<"\n";
@@ -61,7 +62,7 @@ int main(int argc, char** argv)
             std::for_each(vertex_set.begin(), vertex_set.end(), print<VertexIndex>);
             std::cout<<"\n";
             std::cout<<"affected faces\n";
-            std::for_each(face_and_index_set.begin(), face_and_index_set.end(), print<FaceAndIndex>);
+            std::for_each(face_map.begin(), face_map.end(), print<std::pair<FaceIndex, Face> >);
             std::cout<<"\n";
             std::cout<<"\n";
         }

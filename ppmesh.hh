@@ -61,7 +61,7 @@ class Ppmesh
     /**
      * Return new vertices, new faces, affected vertices, and affected faces after last updated_info.
      */
-    void  updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::set<FaceAndIndex>& face_and_index_set);
+    void  updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::map<FaceIndex, Face>& face_map);
 
 
     private: //parameters
@@ -175,7 +175,7 @@ class Ppmesh
     std::vector<Vertex>                new_vertices_;
     std::vector<Face>                  new_faces_;
     std::set<VertexIndex>              affected_vertex_indices_;
-    std::set<FaceAndIndex>             affected_face_and_indices_;
+    std::map<FaceIndex, Face>          affected_faces_;
     
     private: //functions
     void         readBase(std::istream& ifs);
@@ -186,7 +186,7 @@ class Ppmesh
     VertexID     further_split(std::vector<VertexID>& neighbors, VertexID id, size_t pos, Side side, bool temp = false);
     void         read_base_mesh(std::istream& ifs);
     void         readPM(std::istream& ifs);
-    FaceAndIndex fh_2_face_and_index(MyMesh::FaceHandle fh);
+    Face         fh_2_face(MyMesh::FaceHandle fh);
 
     template <typename T>
     void read_huffman_tree(std::istream& ifs, Huffman::DecodeTree<T>& tree)

@@ -2,18 +2,24 @@
 #define __GFMESH_H__
 #include "common_def.hh"
 #include "vertexid.hh"
+#include <iostream>
+#include <set>
+#include <vector>
+#include <map>
 class Ppmesh;
 class BitString;
 class Gfmesh
 {
     public:
-        Gfmesh(std::istream ifs);
+        Gfmesh(std::istream& ifs);
         virtual ~Gfmesh(void);
         bool    decode(VertexID id, const BitString& data, size_t* p_pos, bool temp=false);
         /**
          * Update the gfmesh to be consistent with ppmesh.
          */
         void    update(void);
+        void    outputOff(std::ostream& os) const;
+
         
         /**
         * Return the address of vertex array.
@@ -115,6 +121,13 @@ class Gfmesh
         std::vector<NormalValue>    vertex_normal_array_;
         std::vector<NormalValue>    face_normal_array_;
         bool                        updated_;
+
+        //data structure for update(). 
+        //Avoid to be local to improve efficiency.
+        std::vector<Vertex>  vertices;
+        std::vector<Face>    faces;
+        std::set<VertexIndex> vertex_index_set;
+        std::map<FaceIndex, Face> face_map;
     private:
         void  face_normal   (FaceIndex face_index);
         void  vertex_normal (VertexIndex vertex_index);

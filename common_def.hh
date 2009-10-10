@@ -20,6 +20,7 @@ struct Face
     VertexIndex v1;
     VertexIndex v2;
     VertexIndex v3;
+    Face(void){;}
     Face(VertexIndex v1_, VertexIndex v2_, VertexIndex v3_):v1(v1_), v2(v2_), v3(v3_){;}
 };
 
@@ -40,7 +41,6 @@ struct NormalValue
 
 std::ostream& operator<<(std::ostream& ofs, const Vertex& v);
 std::ostream& operator<<(std::ostream& ofs, const Face& f);
-std::ostream& operator<<(std::ostream& ofs, const FaceAndIndex& f);
-bool operator<(const FaceAndIndex& fi1, const FaceAndIndex& fi2);
+std::ostream& operator<<(std::ostream& ofs, const std::pair<FaceIndex, Face>& f);
 #endif
 

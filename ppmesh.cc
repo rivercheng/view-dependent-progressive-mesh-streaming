@@ -347,18 +347,18 @@ void    Ppmesh::output_arrays(std::vector<Vertex>& vertex_array, std::vector<Fac
         return;
 }
 
-void   Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::set<FaceAndIndex>& face_and_index_set)
+void   Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::map<FaceIndex, Face>& face_map)
 {
     vertices = new_vertices_;
     faces    = new_faces_;
-    face_and_index_set = affected_face_and_indices_;
+    face_map = affected_faces_;
     
     //set of vertices in affected_faces_
-    std::set<FaceAndIndex>::const_iterator it = affected_face_and_indices_.begin();
-    std::set<FaceAndIndex>::const_iterator end = affected_face_and_indices_.end();
+    std::map<FaceIndex, Face>::const_iterator it = affected_faces_.begin();
+    std::map<FaceIndex, Face>::const_iterator end = affected_faces_.end();
     for(; it != end; ++it)
     {
-        MyMesh::FaceHandle fh(it->index);
+        MyMesh::FaceHandle fh(it->first);
         MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
         while(fv_it)
         {
@@ -371,11 +371,11 @@ void   Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& fa
     new_vertices_.clear();
     new_faces_.clear();
     affected_vertex_indices_.clear();
-    affected_face_and_indices_.clear();
+    affected_faces_.clear();
 }
 
 //from a face handle to Face
-inline FaceAndIndex Ppmesh::fh_2_face_and_index(MyMesh::FaceHandle fh)
+inline Face Ppmesh::fh_2_face(MyMesh::FaceHandle fh)
 {
     MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
     VertexIndex fv[3] = {0, 0, 0};
@@ -386,7 +386,7 @@ inline FaceAndIndex Ppmesh::fh_2_face_and_index(MyMesh::FaceHandle fh)
         ++fv_it;
         ++index;
     }
-    return FaceAndIndex(fh.idx(), Face(fv[0], fv[1], fv[2]));
+    return Face(fv[0], fv[1], fv[2]);
 }
 
 bool Ppmesh::splitVs(splitInfo* split, bool temp)
@@ -521,24 +521,14 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     MyMesh::ConstVertexFaceIter vf_it(mesh_, v0);
     while(vf_it)
     {
-        affected_face_and_indices_.insert(fh_2_face_and_index(vf_it.handle()));
+        affected_faces_[vf_it.handle().idx()] = fh_2_face(vf_it.handle());
         ++vf_it;
     }
 
     for (unsigned int i = old_face_number; i < curr_face_number; i++)
     {
         MyMesh::FaceHandle fh(i);
-        MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
-        VertexIndex fv[3] = {0, 0, 0};
-        int         index = 0;
-        while(fv_it)
-        {
-            fv[index] = static_cast<VertexIndex>(fv_it.handle().idx());
-            ++fv_it;
-            ++index;
-        }
-        Face f(fv[0], fv[1], fv[2]);
-        new_faces_.push_back(f);
+        new_faces_.push_back(fh_2_face(fh));
     }
     if (!temp)
     {

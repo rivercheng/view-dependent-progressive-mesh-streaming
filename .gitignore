@@ -4,6 +4,7 @@
 *.swo
 *.base
 test_ppmesh
-output
+test_gfmesh
+output*
 temp
 tmp

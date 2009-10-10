@@ -1,12 +1,15 @@
 #include "gfmesh.hh"
 #include "ppmesh.hh"
-Gfmesh::Gfmesh(std::istream ifs)
+Gfmesh::Gfmesh(std::istream& ifs)
 {
     ppmesh_ = new Ppmesh(ifs);
     vertex_array_.reserve(RESERVE_SIZE);
     face_array_.reserve(2*RESERVE_SIZE);
     vertex_normal_array_.reserve(RESERVE_SIZE);
     face_normal_array_.reserve(2*RESERVE_SIZE);
+
+    vertices.reserve(10000);
+    faces.reserve(10000);
 
     ppmesh_->output_arrays(vertex_array_, face_array_);
     for (size_t i = 0; i< face_number(); i++)
@@ -27,6 +30,22 @@ Gfmesh::~Gfmesh()
 {
     delete ppmesh_;
     ppmesh_ = 0;
+}
+
+void Gfmesh::outputOff(std::ostream& os) const
+{
+    os<<"OFF\n"<<vertex_number()<<" "<<face_number()<<" "<<0<<"\n";
+    size_t vn = vertex_number();
+    size_t fn = face_number();
+    for (size_t i = 0; i< vn; i++)
+    {
+        os<<vertex_array_[i].x<<" "<<vertex_array_[i].y<<" "<<vertex_array_[i].z<<"\n";
+    }
+
+    for (size_t i = 0; i< fn; i++)
+    {
+        os<<3<<" "<<face_array_[i].v1<<" "<<face_array_[i].v2<<" "<<face_array_[i].v3<<"\n";
+    }
 }
     
 void Gfmesh::face_normal(FaceIndex face_index)
@@ -105,14 +124,19 @@ bool Gfmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool temp
 
 void Gfmesh::update()
 {
-    std::vector<Vertex> vertices;
+    /*std::vector<Vertex> vertices;
     std::vector<Face>   faces;
     vertices.reserve(100);
     faces.reserve(100);
     std::set<VertexIndex>    vertex_index_set;
     std::set<FaceAndIndex>   face_and_index_set;
+    */
+    vertices.clear();
+    faces.clear();
+    vertex_index_set.clear();
+    face_map.clear();
     
-    ppmesh_->updated_info(vertices, faces, vertex_index_set, face_and_index_set);
+    ppmesh_->updated_info(vertices, faces, vertex_index_set, face_map);
 
     std::vector<Vertex>::const_iterator vit = vertices.begin();
     std::vector<Vertex>::const_iterator vend = vertices.end();
@@ -126,15 +150,15 @@ void Gfmesh::update()
     for (; fit != fend; ++fit)
     {
         face_array_.push_back(*fit);
-        face_normal(face_array_.size());
+        //face_normal(face_array_.size()-1);
     }
 
-    std::set<FaceAndIndex>::const_iterator fi_it = face_and_index_set.begin();
-    std::set<FaceAndIndex>::const_iterator fi_end = face_and_index_set.end();
+    std::map<FaceIndex, Face>::const_iterator fi_it = face_map.begin();
+    std::map<FaceIndex, Face>::const_iterator fi_end = face_map.end();
     for (; fi_it != fi_end; ++fi_it)
     {
-        face_array_[fi_it->index] = fi_it->f;
-        face_normal(fi_it->index);
+        face_array_[fi_it->first] = fi_it->second;
+        face_normal(fi_it->first);
     }
 
     std::set<VertexIndex>::const_iterator vi_it = vertex_index_set.begin();
