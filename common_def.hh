@@ -24,13 +24,6 @@ struct Face
     Face(VertexIndex v1_, VertexIndex v2_, VertexIndex v3_):v1(v1_), v2(v2_), v3(v3_){;}
 };
 
-struct FaceAndIndex
-{
-    FaceIndex index;
-    Face      f;
-    FaceAndIndex(FaceIndex i, Face f_):index(i), f(f_){;}
-};
-
 struct NormalValue
 {
     Normalf nxy;

@@ -15,9 +15,5 @@ std::ostream& operator<<(std::ostream& ofs, const std::pair<FaceIndex, Face>& fi
     return ofs<<fi.first<<" "<<fi.second;
 }
 
-bool operator<(const FaceAndIndex& fi1, const FaceAndIndex& fi2)
-{
-    return fi1.index < fi2.index;
-}
 
 
