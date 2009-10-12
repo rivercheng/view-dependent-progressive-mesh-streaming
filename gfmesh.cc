@@ -2,7 +2,7 @@
 #include "ppmesh.hh"
 Gfmesh::Gfmesh(std::istream& ifs)
 {
-    ppmesh_ = new Ppmesh(ifs);
+    ppmesh_ = new Ppmesh(ifs, vertices, faces, vertex_index_set, face_map);
     vertex_array_.reserve(RESERVE_SIZE);
     face_array_.reserve(2*RESERVE_SIZE);
     vertex_normal_array_.reserve(RESERVE_SIZE);
@@ -124,20 +124,6 @@ bool Gfmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool temp
 
 void Gfmesh::update()
 {
-    /*std::vector<Vertex> vertices;
-    std::vector<Face>   faces;
-    vertices.reserve(100);
-    faces.reserve(100);
-    std::set<VertexIndex>    vertex_index_set;
-    std::set<FaceAndIndex>   face_and_index_set;
-    */
-    vertices.clear();
-    faces.clear();
-    vertex_index_set.clear();
-    face_map.clear();
-    
-    //ppmesh_->updated_info(vertices, faces, vertex_index_set, face_map);
-
     std::vector<Vertex>::const_iterator vit = vertices.begin();
     std::vector<Vertex>::const_iterator vend = vertices.end();
     for (; vit != vend; ++vit)
@@ -167,6 +153,11 @@ void Gfmesh::update()
     {
         vertex_normal(*vi_it);
     }
+    
+    vertices.clear();
+    faces.clear();
+    vertex_index_set.clear();
+    face_map.clear();
 }
 
 
