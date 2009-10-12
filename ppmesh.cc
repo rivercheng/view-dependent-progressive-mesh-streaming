@@ -38,7 +38,31 @@ Ppmesh::Ppmesh(std::istream& ifs, int quantize_bits)
         quantize_bits_(quantize_bits), level0_(0), level1_(9),\
         x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0),\
         id_coder_(0),\
-        geometry_coder1_(0), geometry_coder2_(0) 
+        geometry_coder1_(0), geometry_coder2_(0),\
+        new_vertices_(0), new_faces_(0),\
+        affected_vertex_indices_(0),\
+        affected_faces_(0)
+{
+    assert(ifs);
+    readBase(ifs);
+
+}
+
+Ppmesh::Ppmesh(std::istream& ifs, 
+           std::vector<Vertex>&               new_vertices,\
+           std::vector<Face>&                 new_faces,\
+           std::set<VertexIndex>&             affected_vertex_indices,\
+           std::map<FaceIndex, Face>&         affected_faces,\
+           int quantize_bits)
+        :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0),\
+        n_max_vertices_(0), tree_bits_(0), levels_(0), \
+        quantize_bits_(quantize_bits), level0_(0), level1_(9),\
+        x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0),\
+        id_coder_(0),\
+        geometry_coder1_(0), geometry_coder2_(0),\
+        new_vertices_(&new_vertices), new_faces_(&new_faces),\
+        affected_vertex_indices_(&affected_vertex_indices),\
+        affected_faces_(&affected_faces)
 {
     assert(ifs);
     readBase(ifs);
@@ -347,33 +371,6 @@ void    Ppmesh::output_arrays(std::vector<Vertex>& vertex_array, std::vector<Fac
         return;
 }
 
-void   Ppmesh::updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::map<FaceIndex, Face>& face_map)
-{
-    vertices = new_vertices_;
-    faces    = new_faces_;
-    face_map = affected_faces_;
-    
-    //set of vertices in affected_faces_
-    std::map<FaceIndex, Face>::const_iterator it = affected_faces_.begin();
-    std::map<FaceIndex, Face>::const_iterator end = affected_faces_.end();
-    for(; it != end; ++it)
-    {
-        MyMesh::FaceHandle fh(it->first);
-        MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
-        while(fv_it)
-        {
-            affected_vertex_indices_.insert(static_cast<VertexIndex>(fv_it.handle().idx()));
-            ++fv_it;
-        }
-    }
-    vertex_index_set = affected_vertex_indices_;
-
-    new_vertices_.clear();
-    new_faces_.clear();
-    affected_vertex_indices_.clear();
-    affected_faces_.clear();
-}
-
 //from a face handle to Face
 inline Face Ppmesh::fh_2_face(MyMesh::FaceHandle fh)
 {
@@ -515,21 +512,31 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     map_[id1].v = v1;
 
     //collect the information of which vertices and faces are added.
-    Vertex v(x0, y0, z0);
-    new_vertices_.push_back(v);
-
-    MyMesh::ConstVertexFaceIter vf_it(mesh_, v0);
-    while(vf_it)
+    if (new_vertices_ && new_faces_ && affected_faces_ && affected_vertex_indices_)
     {
-        affected_faces_[vf_it.handle().idx()] = fh_2_face(vf_it.handle());
-        ++vf_it;
-    }
+        Vertex v(x0, y0, z0);
+        new_vertices_->push_back(v);
 
-    for (unsigned int i = old_face_number; i < curr_face_number; i++)
-    {
-        MyMesh::FaceHandle fh(i);
-        new_faces_.push_back(fh_2_face(fh));
+        MyMesh::ConstVertexFaceIter vf_it(mesh_, v0);
+        while(vf_it)
+        {
+            (*affected_faces_)[vf_it.handle().idx()] = fh_2_face(vf_it.handle());
+            MyMesh::ConstFaceVertexIter fv_it(mesh_, vf_it.handle());
+            while(fv_it)
+            {
+                affected_vertex_indices_->insert(static_cast<VertexIndex>(fv_it.handle().idx()));
+                ++fv_it;
+            }
+            ++vf_it;
+        }
+
+        for (unsigned int i = old_face_number; i < curr_face_number; i++)
+        {
+            MyMesh::FaceHandle fh(i);
+            new_faces_->push_back(fh_2_face(fh));
+        }
     }
+    
     if (!temp)
     {
         //split the vertice splits in the waiting list

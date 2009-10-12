@@ -136,7 +136,7 @@ void Gfmesh::update()
     vertex_index_set.clear();
     face_map.clear();
     
-    ppmesh_->updated_info(vertices, faces, vertex_index_set, face_map);
+    //ppmesh_->updated_info(vertices, faces, vertex_index_set, face_map);
 
     std::vector<Vertex>::const_iterator vit = vertices.begin();
     std::vector<Vertex>::const_iterator vend = vertices.end();

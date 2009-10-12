@@ -22,7 +22,14 @@ int main(int argc, char** argv)
     std::string base_file(argv[1]);
     
         std::ifstream ifs(base_file.c_str());
-        Ppmesh mesh(ifs);
+        std::vector<Vertex> vertices;
+        std::vector<Face>   faces;
+        vertices.reserve(10);
+        faces.reserve(10);
+        std::set<VertexIndex> vertex_set;
+        std::map<FaceIndex, Face>   face_map;
+        Ppmesh mesh(ifs, vertices, faces, vertex_set, face_map);
+        //Ppmesh mesh(ifs);
         std::cerr<<"mesh readed."<<std::endl;
         
         //initial decoding here
@@ -44,13 +51,7 @@ int main(int argc, char** argv)
             //std::cerr<<"to decode "<<id<<" with "<<data<<std::endl;
             mesh.decode(id, data,&p_pos);
             //std::cerr<<i<<std::endl;
-            std::vector<Vertex> vertices;
-            std::vector<Face>   faces;
-            vertices.reserve(10);
-            faces.reserve(10);
-            std::set<VertexIndex> vertex_set;
-            std::map<FaceIndex, Face>   face_map;
-            mesh.updated_info(vertices, faces, vertex_set, face_map);
+            /*
             std::cout<<i+1024<<"\n";
             std::cout<<"new vertices"<<"\n";
             std::for_each(vertices.begin(), vertices.end(), print<Vertex>);
@@ -65,7 +66,26 @@ int main(int argc, char** argv)
             std::for_each(face_map.begin(), face_map.end(), print<std::pair<FaceIndex, Face> >);
             std::cout<<"\n";
             std::cout<<"\n";
+            */
+            //vertices.clear();
+            //faces.clear();
+            //vertex_set.clear();
+            //face_map.clear();
         }
+            std::cout<<i+1024<<"\n";
+            std::cout<<"new vertices"<<"\n";
+            std::for_each(vertices.begin(), vertices.end(), print<Vertex>);
+            std::cout<<"\n";
+            std::cout<<"new faces"<<"\n";
+            std::for_each(faces.begin(), faces.end(), print<Face>);
+            std::cout<<"\n";
+            std::cout<<"affected vertices\n";
+            std::for_each(vertex_set.begin(), vertex_set.end(), print<VertexIndex>);
+            std::cout<<"\n";
+            std::cout<<"affected faces\n";
+            std::for_each(face_map.begin(), face_map.end(), print<std::pair<FaceIndex, Face> >);
+            std::cout<<"\n";
+            std::cout<<"\n";
         ifs.close();  					//reconstitution of the poor progressive mesh complete
     return 0;
 }

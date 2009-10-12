@@ -24,6 +24,12 @@ class Ppmesh
 {
     public:
     Ppmesh(std::istream& ifs, int quantize_bits = 14);
+    Ppmesh(std::istream& ifs, 
+           std::vector<Vertex>&               new_vertices_,\
+           std::vector<Face>&                 new_faces_,\
+           std::set<VertexIndex>&             affected_vertex_indices_,\
+           std::map<FaceIndex, Face>&         affected_faces_,\
+           int quantize_bits = 14);
     virtual ~Ppmesh(void);
     
     
@@ -57,12 +63,6 @@ class Ppmesh
      * output all the vertices and faces in the ppmesh to vertex_array and face_array.
      */
     void    output_arrays(std::vector<Vertex>& vertex_array, std::vector<Face>& face_array) const;
-
-    /**
-     * Return new vertices, new faces, affected vertices, and affected faces after last updated_info.
-     */
-    void  updated_info(std::vector<Vertex>& vertices, std::vector<Face>& faces, std::set<VertexIndex>& vertex_index_set, std::map<FaceIndex, Face>& face_map);
-
 
     private: //parameters
     struct MyTraits : public OpenMesh::DefaultTraits
@@ -170,12 +170,10 @@ class Ppmesh
     Huffman::HuffmanCoder<int>         *  geometry_coder2_;
     std::set<VertexID>                 to_be_split_;
 
-    VertexIndex                        last_vertex_index_;
-    FaceIndex                          last_face_index_;
-    std::vector<Vertex>                new_vertices_;
-    std::vector<Face>                  new_faces_;
-    std::set<VertexIndex>              affected_vertex_indices_;
-    std::map<FaceIndex, Face>          affected_faces_;
+    std::vector<Vertex>               *new_vertices_;
+    std::vector<Face>                 *new_faces_;
+    std::set<VertexIndex>             *affected_vertex_indices_;
+    std::map<FaceIndex, Face>         *affected_faces_;
     
     private: //functions
     void         readBase(std::istream& ifs);
