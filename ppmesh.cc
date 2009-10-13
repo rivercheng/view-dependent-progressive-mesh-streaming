@@ -4,21 +4,23 @@
 #include "ppmesh.hh"
 #include "huffman.hh"
 
-//#define DEBUGGING
+// #define DEBUGGING
 #ifdef DEBUGGING
-#define DEBUG(x) std::cerr<<(x)<<std::endl;
+#define DEBUG(x) std::cerr << (x) << std::endl;
 #else
 #define DEBUG(x)
 #endif
 static const char MAGIC_WORD[] = "PPMESH";
 static const unsigned int MAX_NEIGHBORS = 1000;
 
-//Dequantize the difference
-static double de_quantize_d(int value, double max, double min, unsigned int quantize_bit = 12)
+// Dequantize the difference
+static double de_quantize_d(int value, double max, double min, \
+                            unsigned int quantize_bit = 12)
 {
     unsigned int steps;
     static unsigned int step_array[17]=\
-                                       {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536};
+          {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, \
+           1024, 2048, 4096, 8192, 16384, 32768, 65536};
     if (quantize_bit <= 16)
     {
         steps = step_array[quantize_bit];
@@ -33,35 +35,34 @@ static double de_quantize_d(int value, double max, double min, unsigned int quan
 }
 
 Ppmesh::Ppmesh(std::istream& ifs, int quantize_bits)
-        :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0),\
+        :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0), \
         n_max_vertices_(0), tree_bits_(0), levels_(0), \
-        quantize_bits_(quantize_bits), level0_(0), level1_(9),\
-        x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0),\
-        id_coder_(0),\
-        geometry_coder1_(0), geometry_coder2_(0),\
-        new_vertices_(0), new_faces_(0),\
-        affected_vertex_indices_(0),\
+        quantize_bits_(quantize_bits), level0_(0), level1_(9), \
+        x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0), \
+        id_coder_(0), \
+        geometry_coder1_(0), geometry_coder2_(0), \
+        new_vertices_(0), new_faces_(0), \
+        affected_vertex_indices_(0), \
         affected_faces_(0)
 {
     assert(ifs);
     readBase(ifs);
-
 }
 
-Ppmesh::Ppmesh(std::istream& ifs, 
-           std::vector<Vertex>&               new_vertices,\
-           std::vector<Face>&                 new_faces,\
-           std::set<VertexIndex>&             affected_vertex_indices,\
-           std::map<FaceIndex, Face>&         affected_faces,\
+Ppmesh::Ppmesh(std::istream& ifs, \
+           std::vector<Vertex>&               new_vertices, \
+           std::vector<Face>&                 new_faces, \
+           std::set<VertexIndex>&             affected_vertex_indices, \
+           std::map<FaceIndex, Face>&         affected_faces, \
            int quantize_bits)
-        :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0),\
+        :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0), \
         n_max_vertices_(0), tree_bits_(0), levels_(0), \
-        quantize_bits_(quantize_bits), level0_(0), level1_(9),\
-        x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0),\
-        id_coder_(0),\
-        geometry_coder1_(0), geometry_coder2_(0),\
-        new_vertices_(&new_vertices), new_faces_(&new_faces),\
-        affected_vertex_indices_(&affected_vertex_indices),\
+        quantize_bits_(quantize_bits), level0_(0), level1_(9), \
+        x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0), \
+        id_coder_(0), \
+        geometry_coder1_(0), geometry_coder2_(0), \
+        new_vertices_(&new_vertices), new_faces_(&new_faces), \
+        affected_vertex_indices_(&affected_vertex_indices), \
         affected_faces_(&affected_faces)
 {
     assert(ifs);
@@ -79,7 +80,7 @@ void
 Ppmesh::readBase(std::istream& ifs)
 {
     read_base_mesh(ifs);
-    //DEBUG("base mesh read.");
+    // DEBUG("base mesh read.");
 
     bool swap = OpenMesh::Endian::local() != OpenMesh::Endian::LSB;
     read_huffman_tree(ifs, id_tree_);
@@ -89,7 +90,6 @@ Ppmesh::readBase(std::istream& ifs)
     if (tree1Exist_)
     {
         read_huffman_tree(ifs, geometry_tree1_);
-
     }
 
     OpenMesh::IO::binary<bool>::restore(ifs, tree2Exist_, swap);
@@ -108,8 +108,9 @@ Ppmesh::readBase(std::istream& ifs)
             geometry_coder2_ = new Huffman::HuffmanCoder<int>(geometry_tree2_);
     }
 }
-    
-void Ppmesh::vertex_faces(VertexIndex vertex_index, std::vector<FaceIndex>& face_array) const
+
+void Ppmesh::vertex_faces(VertexIndex vertex_index, \
+                          std::vector<FaceIndex>& face_array) const
 {
         MyMesh::VertexHandle v(vertex_index);
         MyMesh::ConstVertexFaceIter vf_it(mesh_, v);
@@ -139,17 +140,17 @@ void Ppmesh::readPM(std::istream& ifs)
     }
 
     size_t ignore;
-    OpenMesh::IO::binary<size_t>::restore( ifs, n_base_vertices_,   swap );
+    OpenMesh::IO::binary<size_t>::restore(ifs, n_base_vertices_,   swap);
     if (!is64bit)
     {
         OpenMesh::IO::binary<size_t>::restore(ifs, ignore, swap);
     }
-    OpenMesh::IO::binary<size_t>::restore( ifs, n_base_faces_,      swap );
+    OpenMesh::IO::binary<size_t>::restore(ifs, n_base_faces_,      swap);
     if (!is64bit)
     {
         OpenMesh::IO::binary<size_t>::restore(ifs, ignore, swap);
     }
-    OpenMesh::IO::binary<size_t>::restore( ifs, n_detail_vertices_, swap );
+    OpenMesh::IO::binary<size_t>::restore(ifs, n_detail_vertices_, swap);
     if (!is64bit)
     {
         OpenMesh::IO::binary<size_t>::restore(ifs, ignore, swap);
@@ -164,10 +165,10 @@ void Ppmesh::readPM(std::istream& ifs)
     // load base mesh
     mesh_.clear();
 
-    for (i=0; i<n_base_vertices_; ++i)
+    for (i = 0; i < n_base_vertices_; ++i)
     {
         MyMesh::VertexHandle v;
-        OpenMesh::IO::binary<MyMesh::Point>::restore( ifs, p, swap );
+        OpenMesh::IO::binary<MyMesh::Point>::restore(ifs, p, swap);
         v = mesh_.add_vertex(p);
         VertexID id = i + leading_one;
         mesh_.deref(v).id = id;
@@ -176,11 +177,11 @@ void Ppmesh::readPM(std::istream& ifs)
     }
 
 
-    for (i=0; i<n_base_faces_; ++i)
+    for (i = 0; i < n_base_faces_; ++i)
     {
-        OpenMesh::IO::binary<unsigned int>::restore( ifs, i0, swap);
-        OpenMesh::IO::binary<unsigned int>::restore( ifs, i1, swap);
-        OpenMesh::IO::binary<unsigned int>::restore( ifs, i2, swap);
+        OpenMesh::IO::binary<unsigned int>::restore(ifs, i0, swap);
+        OpenMesh::IO::binary<unsigned int>::restore(ifs, i1, swap);
+        OpenMesh::IO::binary<unsigned int>::restore(ifs, i2, swap);
         mesh_.add_face(mesh_.vertex_handle(i0),
                        mesh_.vertex_handle(i1),
                        mesh_.vertex_handle(i2));
@@ -197,24 +198,25 @@ void Ppmesh::readPM(std::istream& ifs)
 void Ppmesh::read_base_mesh(std::istream& ifs)
 {
     bool swap = OpenMesh::Endian::local() != OpenMesh::Endian::LSB;
-    //flag
+    // flag
     char buffer[255];
-    ifs.read(buffer, sizeof(MAGIC_WORD)-1);	//check a key word at the beginning of the file. Here "PPMESH"
+    // check a key word at the beginning of the file. Here "PPMESH"
+    ifs.read(buffer, sizeof(MAGIC_WORD)-1);
     buffer[sizeof(MAGIC_WORD)-1] = '\0';
     if (std::string(buffer) != MAGIC_WORD)
     {
         throw WrongFileFormat();
     }
 
-    //read level0, level1, tree_bits_
+    // read level0, level1, tree_bits_
     OpenMesh::IO::binary<unsigned int>::restore(ifs, level0_, swap);
     OpenMesh::IO::binary<unsigned int>::restore(ifs, level1_, swap);
     OpenMesh::IO::binary<unsigned int>::restore(ifs, tree_bits_, swap);
 
-    //read minimum_depth_
+    // read minimum_depth_
     OpenMesh::IO::binary<unsigned int>::restore(ifs, minimum_depth_, swap);
 
-    //write quantize_bits_, x_max, x_min, y_max, y_min, z_max, z_min
+    // write quantize_bits_, x_max, x_min, y_max, y_min, z_max, z_min
     OpenMesh::IO::binary<unsigned int>::restore(ifs, quantize_bits_, swap);
     OpenMesh::IO::binary<double>::restore(ifs, x_max_, swap);
     OpenMesh::IO::binary<double>::restore(ifs, x_min_, swap);
@@ -234,21 +236,22 @@ unsigned int Ppmesh::id2level(VertexID id) const
     while ((mask & id) == 0)
     {
         id <<= 1;
-        len --;
+        len--;
     }
     if (len < tree_bits_)
     {
-        std::cerr<<"Wrong id."<<std::endl;
+        std::cerr << "Wrong id." << std::endl;
         return 0;
     }
     return (len-tree_bits_);
 }
 
-bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool temp)
+bool Ppmesh::decode(VertexID id, const BitString& data, \
+                    size_t* p_pos, bool temp)
 {
     unsigned int level= id2level(id);
-    
-    //The first bit is the flag. If '1' then it is a leaf.
+
+    // The first bit is the flag. If '1' then it is a leaf.
     if (level >= minimum_depth_ && data.test(*p_pos))
     {
         (*p_pos)++;
@@ -265,7 +268,6 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     }
 
     std::vector<unsigned int> value_array;
-    //std::vector<unsigned int> value_array;
     size_t number = 0;
     number = id_coder_->decode(data, value_array, p_pos, 2);
     assert(number == 2);
@@ -279,8 +281,10 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     int dx = 0;
     int dy = 0;
     int dz = 0;
-    // level < level0_, dx, dy, dz are not compressed
-    // level0_ <= level < level1_, dx, dy, dz are compressed with the first huffman table
+    // level < level0_,
+    //     dx, dy, dz are not compressed
+    // level0_ <= level < level1_,
+    //     dx, dy, dz are compressed with the first huffman table
     // level >= level1_, dx, dy, dz are compressed with the second huffman table
     if (level < level0_)
     {
@@ -306,7 +310,7 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
         {
             coder = geometry_coder2_;
         }
-        //for debug
+        // for debug
         number = 0;
         number = coder->decode(data, geometry_array, p_pos, 3);
         assert(number == 3);
@@ -319,7 +323,7 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     DEBUG(dx);
     DEBUG(dy);
     DEBUG(dz);
-        
+
     splitInfo* split = new splitInfo();
     split->id = id;
     split->code_l = code_l;
@@ -328,9 +332,9 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
     split->dy = dy;
     split->dz = dz;
 
-    //if the parent vertex is not split yet, then this vertex does not exist.
-    //We put this vertex split in the waiting list of its parent vertex
-    if (map_.find(id) == map_.end()) 
+    // if the parent vertex is not split yet, then this vertex does not exist.
+    // We put this vertex split in the waiting list of its parent vertex
+    if (map_.find(id) == map_.end())
     {
         map_[id>>1].waiting_list.push_back(split);
         return false;
@@ -340,13 +344,14 @@ bool    Ppmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool t
         bool result = splitVs(split, temp);
         if (result)
         {
-            //update the patches
+            // update the patches
         }
         return result;
     }
 }
-    
-void    Ppmesh::output_arrays(std::vector<Vertex>& vertex_array, std::vector<Face>& face_array) const
+
+void Ppmesh::output_arrays(std::vector<Vertex>& vertex_array, \
+                           std::vector<Face>& face_array) const
 {
         MyMesh::ConstVertexIter v_it(mesh_.vertices_begin());
         MyMesh::ConstVertexIter v_end(mesh_.vertices_end());
@@ -371,13 +376,13 @@ void    Ppmesh::output_arrays(std::vector<Vertex>& vertex_array, std::vector<Fac
         return;
 }
 
-//from a face handle to Face
+// from a face handle to Face
 inline Face Ppmesh::fh_2_face(MyMesh::FaceHandle fh)
 {
     MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
     VertexIndex fv[3] = {0, 0, 0};
     int         index = 0;
-    while(fv_it)
+    while (fv_it)
     {
         fv[index] = static_cast<VertexIndex>(fv_it.handle().idx());
         ++fv_it;
@@ -386,12 +391,12 @@ inline Face Ppmesh::fh_2_face(MyMesh::FaceHandle fh)
     return Face(fv[0], fv[1], fv[2]);
 }
 
-bool Ppmesh::splitVs(splitInfo* split, bool temp)
+bool Ppmesh::splitVs(const splitInfo* split, bool temp)
 {
     DEBUG("split");
     DEBUG(split->id);
 
-    //MyMesh::VertexHandle v1 = split->v;
+    // MyMesh::VertexHandle v1 = split->v;
     MyMesh::VertexHandle v1 = map_[split->id].v;
     DEBUG(mesh_.deref(v1).id);
     assert(mesh_.deref(v1).id == split->id);
@@ -421,7 +426,7 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     VertexID             o_id_l = 0;
     VertexID             o_id_r = 0;
     VsInfo&              vsinfo = map_[id];
-    
+
     if (code_l != 0)
     {
         unsigned int code_remain = 1;
@@ -445,8 +450,8 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
         vsinfo.id_l = o_id_l;
         vsinfo.code_remain_l = code_remain;
     }
-    //else it means no vl exist.
-    //we just keep vl as the default value(-1).
+    // else it means no vl exist.
+    // we just keep vl as the default value(-1).
 
     if (code_r != 0)
     {
@@ -470,14 +475,14 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
         vr = map_[id_r].v;
         vsinfo.id_r = o_id_r;
         vsinfo.code_remain_r = code_remain;
-
     }
     DEBUG(id_l);
     DEBUG(id_r);
 
     if (id_l == id_r)
     {
-        //We have to delay the split since the two neighbors are currently one same vertex.
+        // We have to delay the split since the
+        // two neighbors are currently one same vertex.
         if (!temp)
         {
             map_[id_r].waiting_list.push_back(split);
@@ -500,10 +505,10 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     mesh_.vertex_split(v0, v1, vl, vr);
     unsigned int curr_face_number = mesh_.n_faces();
     DEBUG(curr_face_number);
-    
+
     delete split;
     split = 0;
-    
+
     VertexID id0 = (id << 1) + 1;
     VertexID id1 = (id << 1);
     mesh_.deref(v0).id = id0;
@@ -511,20 +516,25 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     map_[id0].v = v0;
     map_[id1].v = v1;
 
-    //collect the information of which vertices and faces are added.
-    if (new_vertices_ && new_faces_ && affected_faces_ && affected_vertex_indices_)
+    // collect the information of which vertices and faces are added.
+    if (new_vertices_ && new_faces_ \
+                      && affected_faces_ \
+                      && affected_vertex_indices_)
     {
         Vertex v(x0, y0, z0);
         new_vertices_->push_back(v);
 
         MyMesh::ConstVertexFaceIter vf_it(mesh_, v0);
-        while(vf_it)
+        while (vf_it)
         {
-            (*affected_faces_)[vf_it.handle().idx()] = fh_2_face(vf_it.handle());
-            MyMesh::ConstFaceVertexIter fv_it(mesh_, vf_it.handle());
-            while(fv_it)
+            MyMesh::FaceHandle fh = vf_it.handle();
+            (*affected_faces_)[static_cast<VertexIndex>(fh.idx())] \
+                 = fh_2_face(fh);
+            MyMesh::ConstFaceVertexIter fv_it(mesh_, fh);
+            while (fv_it)
             {
-                affected_vertex_indices_->insert(static_cast<VertexIndex>(fv_it.handle().idx()));
+                affected_vertex_indices_->insert(\
+                        static_cast<VertexIndex>(fv_it.handle().idx()));
                 ++fv_it;
             }
             ++vf_it;
@@ -536,10 +546,10 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
             new_faces_->push_back(fh_2_face(fh));
         }
     }
-    
+
     if (!temp)
     {
-        //split the vertice splits in the waiting list
+        // split the vertice splits in the waiting list
         for (size_t i = 0; i < vsinfo.waiting_list.size(); i++)
         {
             splitVs(vsinfo.waiting_list[i]);
@@ -549,7 +559,8 @@ bool Ppmesh::splitVs(splitInfo* split, bool temp)
     return true;
 }
 
-size_t Ppmesh::one_ring_neighbor(const MyMesh::VertexHandle& v1, std::vector<VertexID>& neighbors) const
+size_t Ppmesh::one_ring_neighbor(const MyMesh::VertexHandle& v1, \
+                                 std::vector<VertexID>& neighbors) const
 {
     size_t neighbor_number = 0;
     MyMesh::ConstVertexVertexIter vv_it(mesh_, v1);
@@ -562,33 +573,37 @@ size_t Ppmesh::one_ring_neighbor(const MyMesh::VertexHandle& v1, std::vector<Ver
     return neighbor_number;
 }
 
-size_t Ppmesh::code2id(const std::vector<VertexID>&id_array, unsigned int code, std::vector<VertexID>& result_array, unsigned int* p_code_remain, size_t pos) const
+size_t Ppmesh::code2id(const std::vector<VertexID>&id_array, \
+                       unsigned int code, \
+                       std::vector<VertexID>& result_array, \
+                       unsigned int* p_code_remain, \
+                       size_t pos) const
 {
     std::bitset<sizeof(unsigned int) * 8> bs(code);
     std::string str(bs.to_string());
-    std::string::size_type loc = str.find('1',0);
-    if (loc==std::string::npos)
+    std::string::size_type loc = str.find('1', 0);
+    if (loc == std::string::npos)
     {
-        std::cerr<<"no 1 exists in the id."<<bs<<std::endl;
+        std::cerr << "no 1 exists in the id." << bs << std::endl;
         throw InvalidID();
     }
     str = str.substr(loc+1);
 
-    //We devide the neighbors to two groups based on the value of
-    //i-th bit, and then choose one group according to the input code.
-    //If all neighbors go to one group, we just continue.
+    // We devide the neighbors to two groups based on the value of
+    // i-th bit, and then choose one group according to the input code.
+    // If all neighbors go to one group, we just continue.
     size_t n  = 0;
-    //to improve speed, we avoid using std::vector here
-    //So we convert result_array to a real array
-    
+    // to improve speed, we avoid using std::vector here
+    // So we convert result_array to a real array
+
     const VertexID *real_array = &(id_array[0]);
     size_t real_size = id_array.size();
     assert(real_size <= MAX_NEIGHBORS);
-    
+
     VertexID id_array_1[MAX_NEIGHBORS];
     VertexID id_array_2[MAX_NEIGHBORS];
-    
-    //result_array = id_array;
+
+    // result_array = id_array;
     size_t n1 = 0;
     size_t n2 = 0;
     for (; pos < sizeof(VertexID)*8; pos++)
@@ -615,7 +630,7 @@ size_t Ppmesh::code2id(const std::vector<VertexID>&id_array, unsigned int code, 
                 pos--;
                 break;
             }
-            //DEBUG(str[n]);
+            // DEBUG(str[n]);
             if (str[n] == '0')
             {
                 real_array = id_array_1;
@@ -656,7 +671,7 @@ size_t Ppmesh::code2id(const std::vector<VertexID>&id_array, unsigned int code, 
         }
     }
 
-    //push the rest code into code_remain. The last bit be put first.
+    // push the rest code into code_remain. The last bit be put first.
     size_t i = str.size() - 1;
     while (n < str.size())
     {
@@ -671,16 +686,16 @@ size_t Ppmesh::code2id(const std::vector<VertexID>&id_array, unsigned int code, 
     return pos;
 }
 
-VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, VertexID id, size_t pos,Side side, bool temp)
+VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, \
+                               VertexID id, size_t pos, Side side, bool temp)
 {
-
-    //change the id to id string. (find the leading 1 and remove it)
+    // change the id to id string. (find the leading 1 and remove it)
     std::bitset<sizeof(unsigned int) * 8> bs(id);
     std::string str(bs.to_string());
     std::string::size_type loc = str.find('1',0);
-    if (loc==std::string::npos)
+    if (loc == std::string::npos)
     {
-        std::cerr<<"no 1 exists in the id."<<bs<<std::endl;
+        std::cerr << "no 1 exists in the id." << bs << std::endl;
         throw InvalidID();
     }
     str = str.substr(loc+1);
@@ -689,15 +704,15 @@ VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, VertexID id, si
     VertexID o_parent = 0;
     while (neighbors.size() > 1)
     {
-        //find the common parent of all the vertices in the neighbors list.
+        // find the common parent of all the vertices in the neighbors list.
         size_t len = len_of_id(neighbors[0]) - pos - 1;
         VertexID mask = 0xffffffff << len;
         VertexID parent = (mask & neighbors[0]);
         parent >>= len;
         if (o_parent == 0) o_parent = parent;
 
-        //according to the id_l or id_r of this parent, we collect the code to
-        //guide the further split. (The code is in the reverse order.)
+        // according to the id_l or id_r of this parent, we collect the code to
+        // guide the further split. (The code is in the reverse order.)
         VsInfo& vsinfo = map_[parent];
         VertexID  id_l = vsinfo.id_l;
         VertexID  id_r = vsinfo.id_r;
@@ -759,8 +774,9 @@ VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, VertexID id, si
             }
             else
             {
-                std::cerr<<"id "<<id<<" id_l "<<id_l<<" id_r "<<id_r<<std::endl;
-                std::cerr<<"decode error"<<std::endl;
+                std::cerr << "id " << id << " id_l " << id_l \
+                          << " id_r " << id_r << std::endl;
+                std::cerr << "decode error" << std::endl;
                 throw DecodeError();
             }
         }
