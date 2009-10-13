@@ -36,14 +36,15 @@ static double de_quantize_d(int value, double max, double min, \
 
 Ppmesh::Ppmesh(std::istream& ifs, int quantize_bits)
         :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0), \
-        n_max_vertices_(0), tree_bits_(0), levels_(0), \
+        n_max_vertices_(0), tree_bits_(0), \
+        minimum_depth_(0), \
         quantize_bits_(quantize_bits), level0_(0), level1_(9), \
         x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0), \
         id_coder_(0), \
         geometry_coder1_(0), geometry_coder2_(0), \
         new_vertices_(0), new_faces_(0), \
         affected_vertex_indices_(0), \
-        affected_faces_(0)
+        affected_faces_(0) 
 {
     assert(ifs);
     readBase(ifs);
@@ -56,24 +57,60 @@ Ppmesh::Ppmesh(std::istream& ifs, \
            std::map<FaceIndex, Face>&         affected_faces, \
            int quantize_bits)
         :n_base_vertices_(0), n_base_faces_(0), n_detail_vertices_(0), \
-        n_max_vertices_(0), tree_bits_(0), levels_(0), \
+        n_max_vertices_(0), tree_bits_(0), \
+        minimum_depth_(0), \
         quantize_bits_(quantize_bits), level0_(0), level1_(9), \
         x_min_(0), y_min_(0), z_min_(0), x_max_(0), y_max_(0), z_max_(0), \
         id_coder_(0), \
         geometry_coder1_(0), geometry_coder2_(0), \
         new_vertices_(&new_vertices), new_faces_(&new_faces), \
         affected_vertex_indices_(&affected_vertex_indices), \
-        affected_faces_(&affected_faces)
+        affected_faces_(&affected_faces) 
 {
     assert(ifs);
     readBase(ifs);
 }
 
+Ppmesh::Ppmesh(const Ppmesh& src)
+        :map_(src.map_), \
+        n_base_vertices_(src.n_base_vertices_), n_base_faces_(src.n_base_faces_), \
+        n_detail_vertices_(src.n_detail_vertices_), \
+        n_max_vertices_(src.n_max_vertices_), tree_bits_(src.tree_bits_), \
+        minimum_depth_(src.minimum_depth_), \
+        quantize_bits_(src.quantize_bits_), level0_(src.level0_), level1_(src.level1_), \
+        x_min_(src.x_min_), y_min_(src.y_min_), z_min_(src.z_min_), \
+        x_max_(src.x_max_), y_max_(src.y_max_), z_max_(src.z_max_), \
+        id_tree_(src.id_tree_), \
+        tree1Exist_(src.tree1Exist_), \
+        tree2Exist_(src.tree2Exist_), \
+        geometry_tree1_(src.geometry_tree1_), \
+        geometry_tree2_(src.geometry_tree2_), \
+        id_coder_(0), \
+        geometry_coder1_(0), \
+        geometry_coder2_(0), \
+        to_be_split_(src.to_be_split_), \
+        new_vertices_(src.new_vertices_), \
+        new_faces_(src.new_faces_), \
+        affected_vertex_indices_(src.affected_vertex_indices_), \
+        affected_faces_(src.affected_faces_) 
+{
+    id_coder_ = new Huffman::HuffmanCoder<unsigned int>(id_tree_);
+    if (tree1Exist_)
+    {
+            geometry_coder1_ = new Huffman::HuffmanCoder<int>(geometry_tree1_);
+    }
+    if (tree2Exist_)
+    {
+            geometry_coder2_ = new Huffman::HuffmanCoder<int>(geometry_tree2_);
+    }
+    src.copyMesh(mesh_);
+}
+
 Ppmesh::~Ppmesh()
 {
-        if (id_coder_) delete id_coder_;
-        if (geometry_coder1_) delete geometry_coder1_;
-        if (geometry_coder2_) delete geometry_coder2_;
+        delete id_coder_;
+        delete geometry_coder1_;
+        delete geometry_coder2_;
 }
 
 void
@@ -173,7 +210,7 @@ void Ppmesh::readPM(std::istream& ifs)
         VertexID id = i + leading_one;
         mesh_.deref(v).id = id;
         mesh_.deref(v).level = 0;
-        map_[id].v = v;
+        map_[id].v = v.idx();
     }
 
 
@@ -324,13 +361,13 @@ bool Ppmesh::decode(VertexID id, const BitString& data, \
     DEBUG(dy);
     DEBUG(dz);
 
-    splitInfo* split = new splitInfo();
-    split->id = id;
-    split->code_l = code_l;
-    split->code_r = code_r;
-    split->dx = dx;
-    split->dy = dy;
-    split->dz = dz;
+    splitInfo split;
+    split.id = id;
+    split.code_l = code_l;
+    split.code_r = code_r;
+    split.dx = dx;
+    split.dy = dy;
+    split.dz = dz;
 
     // if the parent vertex is not split yet, then this vertex does not exist.
     // We put this vertex split in the waiting list of its parent vertex
@@ -391,15 +428,19 @@ inline Face Ppmesh::fh_2_face(MyMesh::FaceHandle fh)
     return Face(fv[0], fv[1], fv[2]);
 }
 
-bool Ppmesh::splitVs(const splitInfo* split, bool temp)
+bool Ppmesh::splitVs(splitInfo split, bool temp)
 {
     DEBUG("split");
-    DEBUG(split->id);
+    DEBUG(split.id);
 
     // MyMesh::VertexHandle v1 = split->v;
-    MyMesh::VertexHandle v1 = map_[split->id].v;
+    MyMesh::VertexHandle v1(map_[split.id].v);
     DEBUG(mesh_.deref(v1).id);
-    assert(mesh_.deref(v1).id == split->id);
+    if (mesh_.deref(v1).id != split.id)
+    {
+        std::cerr<< mesh_.deref(v1).id << " " <<split.id<<std::endl;
+    }
+    assert(mesh_.deref(v1).id == split.id);
 
     MyMesh::Point p1 = mesh_.point(v1);
     double x1 = p1[0];
@@ -418,9 +459,9 @@ bool Ppmesh::splitVs(const splitInfo* split, bool temp)
     results.reserve(50);
     MyMesh::VertexHandle vl;
     MyMesh::VertexHandle vr;
-    unsigned int         code_l = split->code_l;
-    unsigned int         code_r = split->code_r;
-    VertexID             id     = split->id;
+    unsigned int         code_l = split.code_l;
+    unsigned int         code_r = split.code_r;
+    VertexID             id     = split.id;
     VertexID             id_l   = 0;
     VertexID             id_r   = 0;
     VertexID             o_id_l = 0;
@@ -446,7 +487,7 @@ bool Ppmesh::splitVs(const splitInfo* split, bool temp)
         }
         id_l = results[0];
         results.clear();
-        vl = map_[id_l].v;
+        vl = MyMesh::VertexHandle(map_[id_l].v);
         vsinfo.id_l = o_id_l;
         vsinfo.code_remain_l = code_remain;
     }
@@ -472,7 +513,7 @@ bool Ppmesh::splitVs(const splitInfo* split, bool temp)
         }
         id_r = results[0];
         results.clear();
-        vr = map_[id_r].v;
+        vr = MyMesh::VertexHandle(map_[id_r].v);
         vsinfo.id_r = o_id_r;
         vsinfo.code_remain_r = code_remain;
     }
@@ -490,9 +531,9 @@ bool Ppmesh::splitVs(const splitInfo* split, bool temp)
         }
         return false;
     }
-    double x0 = x1 + de_quantize_d(split->dx, x_max_, x_min_, quantize_bits_);
-    double y0 = y1 + de_quantize_d(split->dy, y_max_, y_min_, quantize_bits_);
-    double z0 = z1 + de_quantize_d(split->dz, z_max_, z_min_, quantize_bits_);
+    double x0 = x1 + de_quantize_d(split.dx, x_max_, x_min_, quantize_bits_);
+    double y0 = y1 + de_quantize_d(split.dy, y_max_, y_min_, quantize_bits_);
+    double z0 = z1 + de_quantize_d(split.dz, z_max_, z_min_, quantize_bits_);
     DEBUG(x0);
     DEBUG(y0);
     DEBUG(z0);
@@ -506,15 +547,12 @@ bool Ppmesh::splitVs(const splitInfo* split, bool temp)
     unsigned int curr_face_number = mesh_.n_faces();
     DEBUG(curr_face_number);
 
-    delete split;
-    split = 0;
-
     VertexID id0 = (id << 1) + 1;
     VertexID id1 = (id << 1);
     mesh_.deref(v0).id = id0;
     mesh_.deref(v1).id = id1;
-    map_[id0].v = v0;
-    map_[id1].v = v1;
+    map_[id0].v = v0.idx();
+    map_[id1].v = v1.idx();
 
     // collect the information of which vertices and faces are added.
     if (new_vertices_ && new_faces_ \
@@ -785,3 +823,37 @@ VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, \
     }
     return o_parent;
 }
+
+void Ppmesh::copyMesh(MyMesh& dst) const
+{
+    assert(dst.vertices_begin() == dst.vertices_end());
+    MyMesh::ConstVertexIter v_it(mesh_.vertices_begin());
+    MyMesh::ConstVertexIter v_end(mesh_.vertices_end());
+    for (; v_it != v_end; ++v_it)
+    {
+        MyMesh::Point p = mesh_.point(v_it);
+        MyMesh::VertexHandle v = dst.add_vertex(p);
+        dst.deref(v).id = mesh_.deref(v).id;
+        dst.deref(v).level = mesh_.deref(v).level;
+    }
+
+    MyMesh::ConstFaceIter f_it(mesh_.faces_begin());
+    MyMesh::ConstFaceIter f_end(mesh_.faces_end());
+    for ( ; f_it != f_end; ++f_it)
+    {
+        MyMesh::ConstFaceVertexIter fv_it(mesh_, f_it.handle());
+        MyMesh::VertexHandle v1 = fv_it.handle();
+        MyMesh::VertexHandle v2 = (++fv_it).handle();
+        MyMesh::VertexHandle v3 = (++fv_it).handle();
+        dst.add_face(v1, v2, v3);
+    }
+    return;
+}
+
+    
+
+
+
+
+
+

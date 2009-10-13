@@ -22,7 +22,6 @@ class Ppmesh
 {
     // using namespace OpenMesh;
     // using namespace OpenMesh::Attributes;
-
     public:
     Ppmesh(std::istream& ifs, int quantize_bits = 14);
     Ppmesh(std::istream& ifs, \
@@ -31,6 +30,8 @@ class Ppmesh
            std::set<VertexIndex>&             affected_vertex_indices_, \
            std::map<FaceIndex, Face>&         affected_faces_, \
            int quantize_bits = 14);
+
+    Ppmesh(const Ppmesh&);
     virtual ~Ppmesh(void);
 
     /**
@@ -68,34 +69,26 @@ class Ppmesh
     void    output_arrays(std::vector<Vertex>& vertex_array, \
                           std::vector<Face>& face_array) const;
 
-    private:  // parameters
+
+    private:  // private types
     struct MyTraits : public OpenMesh::DefaultTraits
     {
-    VertexAttributes(OpenMesh::Attributes::Normal | \
+        VertexAttributes(OpenMesh::Attributes::Normal | \
                          OpenMesh::Attributes::Status);
-    EdgeAttributes(OpenMesh::Attributes::Status);
-    HalfedgeAttributes(OpenMesh::Attributes::PrevHalfedge);
-    FaceAttributes(OpenMesh::Attributes::Normal | \
+        EdgeAttributes(OpenMesh::Attributes::Status);
+        HalfedgeAttributes(OpenMesh::Attributes::PrevHalfedge);
+        FaceAttributes(OpenMesh::Attributes::Normal | \
                        OpenMesh::Attributes::Status);
-    VertexTraits
-    {
+        VertexTraits
+        {
         public:
         // the id to represent the position in the binary trees.
         unsigned int id;
         unsigned int level;
-    };
-    /* FaceTraits
-    {
-        public:
-        unsigned int s_area;
-    };
-    */
+        };
     };
 
     typedef OpenMesh::TriMesh_ArrayKernelT<MyTraits>  MyMesh;
-    // Ppmesh is not copiable.
-    Ppmesh(const Ppmesh&);
-    Ppmesh& operator=(const Ppmesh&);
 
     enum Side {LEFT, RIGHT};
     class InvalidID {};
@@ -105,54 +98,46 @@ class Ppmesh
 
     struct splitInfo
     {
-        MyMesh::VertexHandle        v;
         VertexID                   id;
         unsigned int           code_l;
         unsigned int           code_r;
         int                        dx;
         int                        dy;
         int                        dz;
-        double                     x1;
-        double                     y1;
-        double                     z1;
+        Coordinate                 x1;
+        Coordinate                 y1;
+        Coordinate                 z1;
     };
 
     struct VsInfo
     {
-        MyMesh::VertexHandle       v;
+        VertexIndex                v;
         VertexID                id_l;
         VertexID                id_r;
         unsigned int            code_remain_l;
         unsigned int            code_remain_r;
-        std::vector<const splitInfo*> waiting_list;
+        std::vector<splitInfo>  waiting_list;
         bool                    isLeaf;
         VsInfo()
                 :id_l(0), id_r(0), \
                  code_remain_l(1), code_remain_r(1), \
                  isLeaf(false)
         {}
-
-        ~VsInfo()
-        {
-            for (size_t i = 0; i < waiting_list.size(); i++)
-            {
-                delete waiting_list[i];
-                waiting_list[i] = 0;
-            }
-        }
     };
 
     typedef std::map<VertexID, VsInfo> Map;
     typedef Map::iterator              MapIter;
     typedef Map::const_iterator        MapConstIter;
 
-    Map               map_;
+    private:  // member variables
     MyMesh            mesh_;
+    Map               map_;
 
-    size_t            n_base_vertices_, n_base_faces_, n_detail_vertices_;
+    size_t            n_base_vertices_; 
+    size_t            n_base_faces_; 
+    size_t            n_detail_vertices_;
     size_t            n_max_vertices_;
     unsigned int      tree_bits_;
-    unsigned int      levels_;
     unsigned int      minimum_depth_;
     unsigned int      quantize_bits_;
     unsigned int      level0_;
@@ -173,17 +158,24 @@ class Ppmesh
     Huffman::HuffmanCoder<unsigned int> *id_coder_;
     Huffman::HuffmanCoder<int>          *geometry_coder1_;
     Huffman::HuffmanCoder<int>          *geometry_coder2_;
+    
     std::set<VertexID>                   to_be_split_;
 
+    // The collections of new vertices, new faces, 
+    // affected faces, and affected vertices.
+    // These collections are initiated in the constructor and 
+    // passed by the parameters in the constructor function.
     std::vector<Vertex>               *new_vertices_;
     std::vector<Face>                 *new_faces_;
     std::set<VertexIndex>             *affected_vertex_indices_;
     std::map<FaceIndex, Face>         *affected_faces_;
     
-    private:  // functions
+    private:  // private member functions
+    Ppmesh& operator=(const Ppmesh&);
+    
     void         readBase(std::istream& ifs);
     unsigned int id2level(VertexID id) const;
-    bool         splitVs(const splitInfo* split, bool temp=false);
+    bool         splitVs(splitInfo split, bool temp=false);
     size_t       one_ring_neighbor(const MyMesh::VertexHandle& v1, \
                                    std::vector<VertexID>& neighbors) const;
     size_t       code2id(const std::vector<VertexID>&id_array, \
@@ -197,6 +189,7 @@ class Ppmesh
     void         read_base_mesh(std::istream& ifs);
     void         readPM(std::istream& ifs);
     Face         fh_2_face(MyMesh::FaceHandle fh);
+    void         copyMesh(MyMesh& dest) const;
 
     template <typename T>
     void read_huffman_tree(std::istream& ifs, Huffman::DecodeTree<T>& tree)

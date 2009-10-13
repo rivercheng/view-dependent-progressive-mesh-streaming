@@ -29,7 +29,20 @@ struct NormalValue
     Normalf nxy;
     Normalf nyz;
     Normalf nzx;
-    NormalValue(Normalf xy, Normalf yz, Normalf zx): nxy(xy), nyz(yz), nzx(zx){;}
+    NormalValue(Normalf xy, Normalf yz, Normalf zx): nxy(xy), nyz(yz), nzx(zx){}
+};
+        
+struct SplitInfo
+{
+     Coordinate x;
+     Coordinate y;
+     Coordinate z;
+     VertexIndex v1;
+     VertexIndex vl;
+     VertexIndex vr;
+     SplitInfo(Coordinate x_, Coordinate y_, Coordinate z_,\
+               VertexIndex v1_, VertexIndex vl_, VertexIndex vr_)
+         :x(x_), y(y_), z(z_), v1(v1_), vl(vl_), vr(vr_){}
 };
 
 std::ostream& operator<<(std::ostream& ofs, const Vertex& v);

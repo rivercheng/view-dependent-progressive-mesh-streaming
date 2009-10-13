@@ -12,12 +12,17 @@ class Gfmesh
 {
     public:
         Gfmesh(std::istream& ifs);
+        Gfmesh(const Gfmesh&);
         virtual ~Gfmesh(void);
         bool    decode(VertexID id, const BitString& data, size_t* p_pos, bool temp=false);
         /**
          * Update the gfmesh to be consistent with ppmesh.
          */
         void    update(void);
+        
+        /**
+         * Output an OFF file of current mesh.
+         */
         void    outputOff(std::ostream& os) const;
 
         
@@ -105,9 +110,7 @@ class Gfmesh
         {
             updated_ = false;
         };
-
-
-    private:
+    private: //variables
         const static int RESERVE_SIZE = 10000000;//assume at least space for RESERVER_SIZE vertices are allocated.
         const static int MAX_VERTEX_FACE = 10000;
         const static int MAX_FACE_VERTEX = 10;
@@ -128,7 +131,10 @@ class Gfmesh
         std::vector<Face>    faces;
         std::set<VertexIndex> vertex_index_set;
         std::map<FaceIndex, Face> face_map;
-    private:
+
+    private:    //functions
+        Gfmesh& operator=(const Gfmesh&);
+        void  init (void);
         void  face_normal   (FaceIndex face_index);
         void  vertex_normal (VertexIndex vertex_index);
 };

@@ -10,7 +10,26 @@ Gfmesh::Gfmesh(std::istream& ifs)
 
     vertices.reserve(10000);
     faces.reserve(10000);
+    init();
+}
 
+Gfmesh::Gfmesh(const Gfmesh& src)
+    :ppmesh_(0), \
+     vertex_array_(src.vertex_array_), \
+     face_array_(src.face_array_), \
+     vertex_normal_array_(src.vertex_normal_array_), \
+     face_normal_array_(src.face_normal_array_), \
+     updated_(src.updated_), \
+     vertices(src.vertices), \
+     faces(src.faces), \
+     vertex_index_set(src.vertex_index_set), \
+     face_map(src.face_map)
+{
+    ppmesh_ = new Ppmesh(*src.ppmesh_);
+}
+
+void Gfmesh::init()
+{
     ppmesh_->output_arrays(vertex_array_, face_array_);
     for (size_t i = 0; i< face_number(); i++)
     {
@@ -159,6 +178,3 @@ void Gfmesh::update()
     vertex_index_set.clear();
     face_map.clear();
 }
-
-
-

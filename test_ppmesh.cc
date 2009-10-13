@@ -72,6 +72,8 @@ int main(int argc, char** argv)
             //vertex_set.clear();
             //face_map.clear();
         }
+        ifs.close();  					//reconstitution of the poor progressive mesh complete
+        Ppmesh mesh2(mesh);
             std::cout<<i+1024<<"\n";
             std::cout<<"new vertices"<<"\n";
             std::for_each(vertices.begin(), vertices.end(), print<Vertex>);
@@ -86,6 +88,5 @@ int main(int argc, char** argv)
             std::for_each(face_map.begin(), face_map.end(), print<std::pair<FaceIndex, Face> >);
             std::cout<<"\n";
             std::cout<<"\n";
-        ifs.close();  					//reconstitution of the poor progressive mesh complete
     return 0;
 }
