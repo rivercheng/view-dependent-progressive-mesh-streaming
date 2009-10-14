@@ -32,6 +32,11 @@ class Ppmesh
            int quantize_bits = 14);
 
     Ppmesh(const Ppmesh&);
+    void set_report_arrays(
+           std::vector<Vertex>&               new_vertices_, \
+           std::vector<Face>&                 new_faces_, \
+           std::set<VertexIndex>&             affected_vertex_indices_, \
+           std::map<FaceIndex, Face>&         affected_faces_);
     virtual ~Ppmesh(void);
 
     /**

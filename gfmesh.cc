@@ -26,6 +26,14 @@ Gfmesh::Gfmesh(const Gfmesh& src)
      face_map(src.face_map)
 {
     ppmesh_ = new Ppmesh(*src.ppmesh_);
+    ppmesh_->set_report_arrays(vertices,\
+            faces, vertex_index_set, face_map);
+    vertex_array_.reserve(RESERVE_SIZE);
+    face_array_.reserve(2*RESERVE_SIZE);
+    vertex_normal_array_.reserve(RESERVE_SIZE);
+    face_normal_array_.reserve(2*RESERVE_SIZE);
+    vertices.reserve(10000);
+    faces.reserve(10000);
 }
 
 void Gfmesh::init()
@@ -148,6 +156,7 @@ void Gfmesh::update()
     for (; vit != vend; ++vit)
     {
         vertex_array_.push_back(*vit);
+        vertex_normal_array_.push_back(NormalValue(0, 0, 0));
     }
     
     std::vector<Face>::const_iterator fit = faces.begin();
@@ -155,6 +164,7 @@ void Gfmesh::update()
     for (; fit != fend; ++fit)
     {
         face_array_.push_back(*fit);
+        face_normal_array_.push_back(NormalValue(0, 0, 0));
         //face_normal(face_array_.size()-1);
     }
 

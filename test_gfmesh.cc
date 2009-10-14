@@ -62,5 +62,6 @@ int main(int argc, char** argv)
         std::ofstream ofs4("output4.off");
         pm->update();
         pm->outputOff(ofs4);
+        delete pm;
     return 0;
 }

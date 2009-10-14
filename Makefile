@@ -1,4 +1,4 @@
-LIBRARY = -lOpenMesh_Core -lOpenMesh_Tools -lPocoFoundation -lPocoNet -lPocoUtil -lglut #-lprofiler	
+LIBRARY = -lOpenMesh_Core #-lOpenMesh_Tools -lPocoFoundation -lPocoNet -lPocoUtil -lglut #-lprofiler	
 OPTIONS =  -Wall -W -Wextra -g -O2 
 CC = g++
 ALL = test_ppmesh test_gfmesh

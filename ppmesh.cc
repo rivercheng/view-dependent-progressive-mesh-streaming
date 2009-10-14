@@ -89,10 +89,10 @@ Ppmesh::Ppmesh(const Ppmesh& src)
         geometry_coder1_(0), \
         geometry_coder2_(0), \
         to_be_split_(src.to_be_split_), \
-        new_vertices_(src.new_vertices_), \
-        new_faces_(src.new_faces_), \
-        affected_vertex_indices_(src.affected_vertex_indices_), \
-        affected_faces_(src.affected_faces_) 
+        new_vertices_(0), \
+        new_faces_(0), \
+        affected_vertex_indices_(0), \
+        affected_faces_(0) 
 {
     id_coder_ = new Huffman::HuffmanCoder<unsigned int>(id_tree_);
     if (tree1Exist_)
@@ -109,8 +109,11 @@ Ppmesh::Ppmesh(const Ppmesh& src)
 Ppmesh::~Ppmesh()
 {
         delete id_coder_;
+        id_coder_ = 0;
         delete geometry_coder1_;
+        geometry_coder1_ = 0;
         delete geometry_coder2_;
+        geometry_coder2_ = 0;
 }
 
 void
@@ -850,7 +853,17 @@ void Ppmesh::copyMesh(MyMesh& dst) const
     return;
 }
 
-    
+void Ppmesh::set_report_arrays(
+           std::vector<Vertex>&               new_vertices, \
+           std::vector<Face>&                 new_faces, \
+           std::set<VertexIndex>&             affected_vertex_indices, \
+           std::map<FaceIndex, Face>&         affected_faces)
+{
+    new_vertices_ = &new_vertices;
+    new_faces_    = &new_faces;
+    affected_vertex_indices_ = &affected_vertex_indices;
+    affected_faces_          = &affected_faces;
+}
 
 
 
