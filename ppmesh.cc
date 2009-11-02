@@ -287,7 +287,7 @@ unsigned int Ppmesh::id2level(VertexID id) const
 }
 
 bool Ppmesh::decode(VertexID id, const BitString& data, \
-                    size_t* p_pos, bool temp)
+                    size_t* p_pos)
 {
     unsigned int level= id2level(id);
 
@@ -381,7 +381,7 @@ bool Ppmesh::decode(VertexID id, const BitString& data, \
     }
     else
     {
-        bool result = splitVs(split, temp);
+        bool result = splitVs(split);
         if (result)
         {
             // update the patches
@@ -431,7 +431,7 @@ inline Face Ppmesh::fh_2_face(MyMesh::FaceHandle fh)
     return Face(fv[0], fv[1], fv[2]);
 }
 
-bool Ppmesh::splitVs(splitInfo split, bool temp)
+bool Ppmesh::splitVs(splitInfo split)
 {
     DEBUG("split");
     DEBUG(split.id);
@@ -477,7 +477,7 @@ bool Ppmesh::splitVs(splitInfo split, bool temp)
         pos = code2id(neighbors, code_l, results, &code_remain);
         if (results.size() > 1)
         {
-            o_id_l = further_split(results, id, pos, LEFT, temp);
+            o_id_l = further_split(results, id, pos, LEFT);
         }
         else
         {
@@ -503,7 +503,7 @@ bool Ppmesh::splitVs(splitInfo split, bool temp)
         pos = code2id(neighbors, code_r, results, &code_remain);
         if (results.size() > 1)
         {
-            o_id_r = further_split(results, id, pos, RIGHT, temp);
+            o_id_r = further_split(results, id, pos, RIGHT);
         }
         else
         {
@@ -527,11 +527,8 @@ bool Ppmesh::splitVs(splitInfo split, bool temp)
     {
         // We have to delay the split since the
         // two neighbors are currently one same vertex.
-        if (!temp)
-        {
-            map_[id_r].waiting_list.push_back(split);
-            to_be_split_.insert(id_r);
-        }
+        map_[id_r].waiting_list.push_back(split);
+        to_be_split_.insert(id_r);
         return false;
     }
     double x0 = x1 + de_quantize_d(split.dx, x_max_, x_min_, quantize_bits_);
@@ -588,15 +585,12 @@ bool Ppmesh::splitVs(splitInfo split, bool temp)
         }
     }
 
-    if (!temp)
+    // split the vertice splits in the waiting list
+    for (size_t i = 0; i < vsinfo.waiting_list.size(); i++)
     {
-        // split the vertice splits in the waiting list
-        for (size_t i = 0; i < vsinfo.waiting_list.size(); i++)
-        {
-            splitVs(vsinfo.waiting_list[i]);
-        }
-        vsinfo.waiting_list.clear();
+        splitVs(vsinfo.waiting_list[i]);
     }
+    vsinfo.waiting_list.clear();
     return true;
 }
 
@@ -728,7 +722,7 @@ size_t Ppmesh::code2id(const std::vector<VertexID>&id_array, \
 }
 
 VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, \
-                               VertexID id, size_t pos, Side side, bool temp)
+                               VertexID id, size_t pos, Side side)
 {
     // change the id to id string. (find the leading 1 and remove it)
     std::bitset<sizeof(unsigned int) * 8> bs(id);
@@ -780,10 +774,7 @@ VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, \
             {
                 code += (1-bit);
             }
-            if (!temp)
-            {
-                vsinfo.code_remain_l >>= 1;
-            }
+            vsinfo.code_remain_l >>= 1;
         }
         else
         {
@@ -808,10 +799,7 @@ VertexID Ppmesh::further_split(std::vector<VertexID>& neighbors, \
                 {
                     code += bit;
                 }
-                if (!temp)
-                {
-                    vsinfo.code_remain_r >>= 1;
-                }
+                vsinfo.code_remain_r >>= 1;
             }
             else
             {
