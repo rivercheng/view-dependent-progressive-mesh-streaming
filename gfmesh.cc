@@ -1,3 +1,8 @@
+// =============================================================================
+// Written by Cheng Wei
+// rivercheng@gmail.com
+// 9 Oct 2009
+// =============================================================================
 #include "gfmesh.hh"
 #include "ppmesh.hh"
 Gfmesh::Gfmesh(std::istream& ifs)

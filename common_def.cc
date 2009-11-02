@@ -1,3 +1,8 @@
+// =============================================================================
+// Written by Cheng Wei
+// rivercheng@gmail.com
+// 8 Oct 2009
+// =============================================================================
 #include "common_def.hh"
 
 std::ostream& operator<<(std::ostream& ofs, const Vertex& v)

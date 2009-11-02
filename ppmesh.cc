@@ -1,3 +1,8 @@
+// =============================================================================
+// Written by Cheng Wei
+// rivercheng@gmail.com
+// 8 Oct 2009
+// =============================================================================
 #include <OpenMesh/Core/IO/BinaryHelper.hh>
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Utils/Endian.hh>
