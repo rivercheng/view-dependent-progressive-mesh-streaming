@@ -10,6 +10,7 @@ class Ppmesh;
 class BitString;
 class Gfmesh
 {
+// ================================INTERFACE=============================================
     public:
         Gfmesh(std::istream& ifs);
         Gfmesh(const Gfmesh&);
@@ -29,7 +30,7 @@ class Gfmesh
         /**
         * Return the address of vertex array.
         */
-        inline  const Coordinate* vertex_array   (void) const
+        const Coordinate* vertex_array   (void) const
         {
             return static_cast<const Coordinate *>(&vertex_array_[0].x);
         }
@@ -37,7 +38,7 @@ class Gfmesh
         /**
         * Return the address of face array.
         */
-        inline const VertexIndex*     face_array   (void)   const
+        const VertexIndex* face_array   (void)   const
         {
             return static_cast<const VertexIndex *>(&face_array_[0].v1);
         }
@@ -45,7 +46,7 @@ class Gfmesh
         /**
         * Return the address of vertex normal array.
         */
-        inline const Normalf*    vertex_normal_array(void) const
+        const Normalf*    vertex_normal_array(void) const
         {
             return static_cast<const Normalf *>(&vertex_normal_array_[0].nxy);
         }
@@ -53,21 +54,15 @@ class Gfmesh
         /**
         * return the address of face normal array.
         */
-        inline const Normalf*    face_normal_array(void)   const
+        const Normalf*    face_normal_array(void)   const
         {
             return static_cast<const Normalf *>(&face_normal_array_[0].nxy);
         }
 
-        inline VertexIndex vertex1_in_face(FaceIndex faceIndex) const
-        {
-            assert(faceIndex < face_array_.size());
-            return face_array_[faceIndex].v1;
-        }
-    
         /**
         * return the vertex number.
         */
-        inline size_t vertex_number    (void) const
+        size_t vertex_number    (void) const
         {
             return vertex_array_.size();
         }
@@ -75,18 +70,24 @@ class Gfmesh
         /**
         * return the face number.
         */
-        inline size_t face_number      (void) const
+        size_t face_number      (void) const
         {
             return face_array_.size();
         }
         
-        inline VertexIndex vertex2_in_face(FaceIndex faceIndex) const
+        VertexIndex vertex1_in_face(FaceIndex faceIndex) const
+        {
+            assert(faceIndex < face_array_.size());
+            return face_array_[faceIndex].v1;
+        }
+        
+        VertexIndex vertex2_in_face(FaceIndex faceIndex) const
         {
             assert(faceIndex < face_array_.size());
             return face_array_[faceIndex].v2;
         }
 
-        inline VertexIndex vertex3_in_face(FaceIndex faceIndex) const
+        VertexIndex vertex3_in_face(FaceIndex faceIndex) const
         {
             assert(faceIndex < face_array_.size());
             return face_array_[faceIndex].v3;
@@ -97,19 +98,20 @@ class Gfmesh
         * It is used in rendering part to avoid refreshing
         * the same gfmesh.
         */
-        inline bool   updated          (void) const
+        bool   updated          (void) const
         {
             return updated_;
         }
 
-    
         /**
         * reset the updated flag to false
         */
-        inline void reset_updated  (void)
+        void reset_updated  (void)
         {
             updated_ = false;
         };
+
+// =====================================PRIVATE================================================================
     private: //variables
         const static int RESERVE_SIZE = 1000000;//assume at least space for RESERVER_SIZE vertices are allocated.
         const static int MAX_VERTEX_FACE = 10000;

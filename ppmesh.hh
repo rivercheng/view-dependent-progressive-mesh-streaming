@@ -20,8 +20,7 @@
 class BitString;
 class Ppmesh
 {
-    // using namespace OpenMesh;
-    // using namespace OpenMesh::Attributes;
+// ============================INTERFACE====================================
     public:
     Ppmesh(std::istream& ifs, int quantize_bits = 14);
     Ppmesh(std::istream& ifs, \
@@ -53,28 +52,28 @@ class Ppmesh
     /**
      * output all the vertices connected to a given vertex (one-ring neighbor).
      */
-    void    vertex_vertices(VertexIndex vertex_index, \
-            std::vector<VertexIndex>& vertex_array) const;
+    void vertex_vertices(VertexIndex vertex_index, \
+                         std::vector<VertexIndex>& vertex_array) const;
 
     /**
      * output the vertices within a given face to vertex_array.
      */
-    void    face_vertices(FaceIndex face_index, \
-                          std::vector<VertexIndex>& vertex_array) const;
+    void face_vertices(FaceIndex face_index, \
+                       std::vector<VertexIndex>& vertex_array) const;
 
     /**
      * output the neighbor faces of the given vertex to face_array.
      */
-    void    vertex_faces(VertexIndex vertex_index, \
-                         std::vector<FaceIndex>& face_array) const;
+    void vertex_faces(VertexIndex vertex_index, \
+                      std::vector<FaceIndex>& face_array) const;
 
     /**
      * output all the vertices and faces in the ppmesh to vertex_array and face_array.
      */
-    void    output_arrays(std::vector<Vertex>& vertex_array, \
-                          std::vector<Face>& face_array) const;
+    void output_arrays(std::vector<Vertex>& vertex_array, \
+                       std::vector<Face>& face_array) const;
 
-
+// =======================================PRIVATE PART==================================//
     private:  // private types
     struct MyTraits : public OpenMesh::DefaultTraits
     {
@@ -87,9 +86,9 @@ class Ppmesh
         VertexTraits
         {
         public:
-        // the id to represent the position in the binary trees.
-        unsigned int id;
-        unsigned int level;
+            // the id to represent the position in the binary trees.
+            unsigned int id;
+            unsigned int level;
         };
     };
 
