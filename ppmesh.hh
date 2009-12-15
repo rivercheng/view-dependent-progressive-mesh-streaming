@@ -73,6 +73,13 @@ class Ppmesh
     void output_arrays(std::vector<Vertex>& vertex_array, \
                        std::vector<Face>& face_array) const;
 
+    /**
+     * output the number of details
+     */
+    size_t n_detail_vertices(void)
+    {
+        return n_detail_vertices_;
+    }
 // =======================================PRIVATE PART==================================//
     private:  // private types
     struct MyTraits : public OpenMesh::DefaultTraits

@@ -188,3 +188,8 @@ void Gfmesh::update()
     vertex_index_set.clear();
     face_map.clear();
 }
+        
+size_t Gfmesh::n_detail_vertices()
+{
+    return ppmesh_->n_detail_vertices();
+}

@@ -98,7 +98,7 @@ class Gfmesh
         * It is used in rendering part to avoid refreshing
         * the same gfmesh.
         */
-        bool   updated          (void) const
+        bool   updated(void) const
         {
             return updated_;
         }
@@ -106,10 +106,12 @@ class Gfmesh
         /**
         * reset the updated flag to false
         */
-        void reset_updated  (void)
+        void reset_updated(void)
         {
             updated_ = false;
         };
+
+        size_t n_detail_vertices();
 
 // =====================================PRIVATE================================================================
     private: //variables

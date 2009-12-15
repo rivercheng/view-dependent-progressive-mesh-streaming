@@ -3,8 +3,11 @@
 *.swp
 *.swo
 *.base
+*.pgm
 test_ppmesh
 test_gfmesh
+test_ppm
+test_render
 output*
 temp
 tmp
