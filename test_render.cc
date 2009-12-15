@@ -34,11 +34,11 @@ int main(int argc, char** argv)
         BitString data;
         VertexID    id;
         unsigned int len;
-        size_t   p_pos = 0;
+        size_t   pos = 0;
         ifs.read((char *)&id, sizeof(id));
         ifs.read((char *)&len, sizeof(len));
         data.read_binary(ifs, len);
-        gfmesh.decode(id, data, &p_pos);
+        gfmesh.decode(id, data, &pos);
     }
     gfmesh.update();
 

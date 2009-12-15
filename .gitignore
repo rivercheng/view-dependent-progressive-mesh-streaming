@@ -8,6 +8,7 @@ test_ppmesh
 test_gfmesh
 test_ppm
 test_render
+test_history
 output*
 temp
 tmp
