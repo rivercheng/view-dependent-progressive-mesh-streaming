@@ -1,5 +1,5 @@
 #include "render.hh"
-#include "gfmesh.hh"
+#include "vdmesh.hh"
 #include <iostream>
 #include <cstdlib>
 #include <map>
@@ -11,8 +11,8 @@ int main(int argc, char** argv)
         exit(1);
     }
     std::ifstream ifs(argv[1]);
-    Gfmesh gfmesh(ifs);
-    size_t count = gfmesh.n_detail_vertices();
+    Vdmesh mesh(ifs);
+    size_t count = mesh.n_detail_vertices();
     double dx = 0;
     double dy = 0;
     double dz = 0;
@@ -50,13 +50,13 @@ int main(int argc, char** argv)
         if (it != vertex_splits.end())
         {
             std::cout << id << std::endl;
-            gfmesh.decode(id, it->second, &pos);
+            mesh.decode(id, it->second, &pos);
         }
     }
 
-    gfmesh.update();
+    mesh.update();
 
-    Render render(argc, argv, argv[1], &gfmesh, 60);
+    Render render(argc, argv, argv[1], &mesh, 60);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();
 }

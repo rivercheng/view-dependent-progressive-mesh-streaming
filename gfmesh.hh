@@ -15,7 +15,7 @@ class Gfmesh
         Gfmesh(std::istream& ifs);
         Gfmesh(const Gfmesh&);
         virtual ~Gfmesh(void);
-        bool    decode(VertexID id, const BitString& data, size_t* p_pos, bool temp=false);
+        bool decode(VertexID id, const BitString& data, size_t* p_pos, bool temp=false);
         /**
          * Update the gfmesh to be consistent with ppmesh.
          */

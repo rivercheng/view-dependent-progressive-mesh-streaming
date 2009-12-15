@@ -3,6 +3,7 @@
 
 #include <list>
 class Gfmesh;
+class Vdmesh;
 
 class NoBaseMesh{};
 
