@@ -6,10 +6,64 @@
 #include "render.hh"
 #include "gfmesh.hh"
 #include "common_def.hh"
+#include "vertexpq.hh"
 
 const size_t FRAME_BUFFER_SIZE = 1024*768*3;
 static Render* render_;
 static unsigned char pixels_[FRAME_BUFFER_SIZE] = {0};
+
+inline void check_visibility()
+{
+    Gfmesh* gfmesh_ = render_->gfmesh();
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DITHER);
+    unsigned char color_r = 0;
+    unsigned char color_g = 0;
+    unsigned char color_b = 1;
+    glBegin(GL_TRIANGLES);
+    for (size_t i=0; i<gfmesh_->face_number(); i++)
+    {
+        VertexIndex v1 = gfmesh_->vertex1_in_face(i);
+        VertexIndex v2 = gfmesh_->vertex2_in_face(i);
+        VertexIndex v3 = gfmesh_->vertex3_in_face(i);
+        glColor3ub(color_r, color_g, color_b);
+        glArrayElement(v1);
+        glArrayElement(v2);
+        glArrayElement(v3);
+        if (color_b == 255)
+        {
+            color_b = 0;
+            if (color_g == 255)
+            {
+                color_g = 0;
+                if (color_r == 255)
+                {
+                    std::cerr<<"overflow!"<<std::endl;
+                }
+                else
+                {
+                    color_r ++;
+                }
+            }
+            else
+            {
+                color_g ++;
+            }
+        }
+        else
+        {
+            color_b++;
+        }
+    }
+    glEnd();
+    glReadBuffer(GL_BACK);
+    glReadPixels(0,0,render_->width_, render_->height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+    std::cerr<<"update"<<std::endl;
+    render_->pq_->update(pixels_, render_->width_*render_->height_*3);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_DITHER);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+}
 
 void draw_surface_with_arrays()
 {
@@ -18,6 +72,16 @@ void draw_surface_with_arrays()
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_DOUBLE, 0, gfmesh_->vertex_array());
+    
+    if (render_->pq_ != 0)
+    {
+        check_visibility();
+        for (int i = 0; i < 300; i++)
+        {
+            std::cout << render_->pq_->pop() << "\n";
+        }
+    }
+    
     if (render_->smooth_ || render_->interpolated_)
     {
         glEnableClientState(GL_NORMAL_ARRAY);
@@ -63,6 +127,7 @@ void draw_surface_with_arrays()
         output_counter++;
         render_->to_output_ = false;
     }
+
 }
 
 void disp()
@@ -329,15 +394,15 @@ void timer(int value)
     glutTimerFunc(1000/value, timer, value);
 }
 
-Render::Render(int& argc, char* argv[], const char* name, Gfmesh* gfmesh, int framerate)
-        :gfmesh_(gfmesh), view_angle_(45), \
+Render::Render(int& argc, char *argv[], const char *name, Gfmesh *gfmesh, int framerate, VertexPQ *pq) 
+        :gfmesh_(gfmesh), pq_(pq), view_angle_(45), \
         min_distance_(0.01), max_distance_(5000),\
         view_x_(0), view_y_(0), view_z_(0), dx_(0), dy_(0), dz_(0), angle_x_(0), \
         angle_y_(0), angle_z_(0), scale_(1), bounding_length_(1), mouse_button_(0),\
         mouse_previous_x_(0), mouse_previous_y_(0),mouse_last_x_(0),mouse_last_y_(0) ,width_(500), height_(500), \
         smooth_(false), interpolated_(false), perspective_(true), \
-        outline_(false), fill_(true), 
-        to_output_(false) 
+        outline_(false), fill_(true), \
+        to_output_(false)
 {
 
     Coordinate center_x = 0;

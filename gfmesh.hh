@@ -111,7 +111,11 @@ class Gfmesh
             updated_ = false;
         };
 
-        size_t n_detail_vertices();
+        //proxy to Ppmesh
+        size_t n_detail_vertices() const;
+        unsigned int id2level(VertexID id) const;
+        VertexID index2id(VertexIndex index) const;
+        VertexIndex id2index(VertexID id) const;
 
 // =====================================PRIVATE================================================================
     private: //variables

@@ -3,14 +3,14 @@
 
 #include <list>
 class Gfmesh;
-class Vdmesh;
+class VertexPQ;
 
 class NoBaseMesh{};
 
 class Render
 {
 public:
-    Render(int& argc, char* argv[], const char* name, Gfmesh* gfmesh, int framerate);
+    Render(int& argc, char *argv[], const char *name, Gfmesh *mesh, int framerate, VertexPQ *pq = 0);
     
     void enterMainLoop();
 
@@ -96,7 +96,8 @@ private:
     typedef std::list<Action> Record;
 
 private:
-    Gfmesh* gfmesh_;
+    Gfmesh   *gfmesh_;
+    VertexPQ *pq_;
     double view_angle_;
     double left_distance_;
     double right_distance_;
@@ -128,6 +129,7 @@ private:
     bool outline_;
     bool fill_;
     bool to_output_;
+    bool to_check_visibility_;
     
     friend void disp(void);
     friend void draw_surface_with_arrays(void);
@@ -139,5 +141,6 @@ private:
     friend void motion(int x, int y);
     friend void timer(int value);
     friend void handleSpecial(int key, int x, int y, int state);
+    friend void check_visibility(void);
 };
 #endif

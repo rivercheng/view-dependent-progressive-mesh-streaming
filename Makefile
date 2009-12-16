@@ -1,8 +1,8 @@
 LIBRARY = -lOpenMesh_Core #-lOpenMesh_Tools -lPocoFoundation -lPocoNet -lPocoUtil -lglut #-lprofiler	
 OPTIONS =  -Wall -W -Wextra -g -O2 
 CC = g++
-ALL = test_ppmesh test_gfmesh test_ppm test_render test_history
-OBJ = ppmesh.o bitstring.o vertexid.o common_def.o gfmesh.o
+ALL = test_ppmesh test_gfmesh test_ppm test_render test_history test_pq
+OBJ = ppmesh.o bitstring.o vertexid.o common_def.o gfmesh.o vertexpq.o
 
 all: $(ALL)
 tags: *.cc *.hh
@@ -10,6 +10,8 @@ tags: *.cc *.hh
 test_render:test_render.o $(OBJ) render.o
 	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
 test_history:test_history.o $(OBJ) render.o
+	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
+test_pq:test_pq.o $(OBJ) render.o
 	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
 %:%.o $(OBJ)
 	$(CC) $(OPTIONS) $(LIBRARY) -o $@ $< $(OBJ)
@@ -28,9 +30,15 @@ gfmesh.o: gfmesh.hh common_def.hh vertexid.hh bitstring.hh ppmesh.hh
 gfmesh.o: huffman.hh
 ppmesh.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
 render.o: render.hh gfmesh.hh common_def.hh vertexid.hh bitstring.hh
+render.o: vertexpq.hh vdmesh.hh
 test_gfmesh.o: gfmesh.hh common_def.hh vertexid.hh bitstring.hh
-test_history.o: render.hh gfmesh.hh common_def.hh vertexid.hh bitstring.hh
+test_history.o: render.hh vdmesh.hh common_def.hh vertexid.hh bitstring.hh
+test_history.o: gfmesh.hh
 test_ppm.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
 test_ppmesh.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
+test_pq.o: render.hh vdmesh.hh common_def.hh vertexid.hh bitstring.hh
+test_pq.o: gfmesh.hh vertexpq.hh
 test_render.o: render.hh gfmesh.hh common_def.hh vertexid.hh bitstring.hh
 vertexid.o: vertexid.hh bitstring.hh
+vertexpq.o: vertexpq.hh vdmesh.hh common_def.hh vertexid.hh bitstring.hh
+vertexpq.o: gfmesh.hh

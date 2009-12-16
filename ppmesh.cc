@@ -865,6 +865,26 @@ void Ppmesh::set_report_arrays(
     affected_faces_          = &affected_faces;
 }
 
+VertexID Ppmesh::index2id(VertexIndex index) const
+{
+    MyMesh::VertexHandle vh(index);
+    return mesh_.deref(vh).id;
+}
+
+VertexIndex Ppmesh::id2index(VertexID id) const
+{
+    MapConstIter it = map_.find(id);
+    if (it != map_.end())
+    {
+        return it->second.v;
+    }
+    else
+    {
+        throw InvalidID();
+    }
+}
+
+
 
 
 

@@ -80,6 +80,22 @@ class Ppmesh
     {
         return n_detail_vertices_;
     }
+
+    /**
+     * Deduce the level of the vertex from its ID.
+     */
+    unsigned int id2level(VertexID id) const;
+
+    /**
+     * Deduce the ID of a vertex from its Index.
+     */
+    VertexID index2id(VertexIndex index) const;
+
+    /**
+     * Deduce the index of a vertex from its ID.
+     */
+    VertexIndex id2index(VertexID id) const;
+
 // =======================================PRIVATE PART==================================//
     private:  // private types
     struct MyTraits : public OpenMesh::DefaultTraits
@@ -185,7 +201,6 @@ class Ppmesh
     Ppmesh& operator=(const Ppmesh&);
     
     void         readBase(std::istream& ifs);
-    unsigned int id2level(VertexID id) const;
     bool         splitVs(splitInfo split, bool temp=false);
     size_t       one_ring_neighbor(const MyMesh::VertexHandle& v1, \
                                    std::vector<VertexID>& neighbors) const;
