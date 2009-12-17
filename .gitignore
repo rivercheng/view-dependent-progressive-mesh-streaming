@@ -4,12 +4,14 @@
 *.swo
 *.base
 *.pgm
+*.ppm
 test_ppmesh
 test_gfmesh
 test_ppm
 test_render
 test_history
 test_pq
+best_image
 output*
 temp
 tmp

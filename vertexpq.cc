@@ -78,12 +78,18 @@ VertexIndex VertexPQ::pop()
     VertexID top = 0;
     if (!index_queue_.empty())
     {
-        if (mode_ == Level || mode_ == ScreenArea)
+        if (mode_ == Level)
         {
-            std::pop_heap(index_queue_.begin(), index_queue_.end());
+            std::pop_heap(index_queue_.begin(), index_queue.end(), CompareLevel(vdmesh_));
         }
-        top = index_queue_.back();
+        else if (mode_ == ScreenArea)
+        {
+            std::pop_heap(index_queue_.begin(), index_queue_.end(), CompareArea(vdmesh_));
+        }
+        VertexIndex index = index_queue_.back();
+        top = vdmesh_->index2id(index);
         index_queue_.pop_back();
+        std::cerr << top << " " << index << " " << vdmesh_->vertex_importance(index) << std::endl;
     }
     return top;
 }
