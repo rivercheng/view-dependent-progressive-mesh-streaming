@@ -62,7 +62,7 @@ class Gfmesh
         /**
         * return the vertex number.
         */
-        size_t vertex_number    (void) const
+        size_t vertex_number(void) const
         {
             return vertex_array_.size();
         }
@@ -70,7 +70,7 @@ class Gfmesh
         /**
         * return the face number.
         */
-        size_t face_number      (void) const
+        size_t face_number(void) const
         {
             return face_array_.size();
         }

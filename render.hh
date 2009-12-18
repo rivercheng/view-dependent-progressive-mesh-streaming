@@ -10,7 +10,7 @@ class NoBaseMesh{};
 class Render
 {
 public:
-    Render(int& argc, char *argv[], const char *name, Gfmesh *mesh, int framerate, VertexPQ *pq = 0);
+    Render(int argc, char *argv[], const char *name, Gfmesh *mesh, int framerate, VertexPQ *pq = 0);
     
     void enterMainLoop();
 

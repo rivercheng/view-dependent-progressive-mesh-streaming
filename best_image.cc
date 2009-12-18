@@ -66,12 +66,28 @@ int main(int argc, char** argv)
         {
             //std::cout << id << std::endl;
             mesh2.decode(id, it->second, &pos);
+            mesh2.update();
         }
     }
     mesh2.update();
 
+    //improve the quality. Split  to at least level 3
+    for (int i = 0; i < 3; i++)
+    {
+        for (size_t index = 0; index < mesh2.vertex_number(); index++)
+        {
+            VertexID id = mesh2.index2id(index);
+            VertexSplitMapConstIter it = vertex_splits.find(id);
+            size_t pos = 0;
+            if (mesh2.id2level(id) < 3 && it != vertex_splits.end())
+            {
+                std::cerr << "id " << id << " index " << index << std::endl;
+                mesh2.decode(id, it->second, &pos);
+            }
+        }
+    }
 
-    VertexPQ pq(&mesh2, ScreenArea);
+    VertexPQ pq(&mesh2, Level);
     SimpleRender render(argc, argv, argv[1], &mesh, &mesh2, vertex_splits, &pq, argv[2]);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();

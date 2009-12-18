@@ -14,9 +14,9 @@ class Vdmesh : public Gfmesh
     public:
         Vdmesh(std::istream& ifs) : Gfmesh(ifs)
         {
-            vertex_visibility_array_.resize(vertex_number(), true);
+            vertex_visibility_array_.resize(vertex_number(), false);
             vertex_importance_array_.resize(vertex_number(), 0);
-            face_visibility_array_.resize(face_number(), true);
+            face_visibility_array_.resize(face_number(), false);
             face_importance_array_.resize(face_number(), 0);
         }
         
@@ -36,7 +36,7 @@ class Vdmesh : public Gfmesh
         {
             if (index >= vertex_visibility_array_.size())
             {
-                vertex_visibility_array_.resize(index+1, true);
+                vertex_visibility_array_.resize(index+1, false);
             }
             vertex_visibility_array_[index] = is_visible;
         }
@@ -45,7 +45,7 @@ class Vdmesh : public Gfmesh
         {
             if (index >= face_visibility_array_.size())
             {
-                face_visibility_array_.resize(index+1, true);
+                face_visibility_array_.resize(index+1, false);
             }
             face_visibility_array_[index] = is_visible;
         }

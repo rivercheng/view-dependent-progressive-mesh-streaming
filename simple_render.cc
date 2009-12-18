@@ -10,13 +10,20 @@
 #include "common_def.hh"
 #include "vertexpq.hh"
 
-const size_t FRAME_BUFFER_SIZE = 1024*768*3;
-static SimpleRender* render_;
-static unsigned char pixels_[FRAME_BUFFER_SIZE] = {0};
-
-inline void check_visibility()
+void SimpleRender::keyboard(unsigned char key, int, int)
 {
-    Gfmesh* gfmesh_ = render_->gfmesh();
+    std::ofstream ofs;
+    switch (key)
+    {
+    case 27:
+        sleep(1);
+        exit(0);
+        break;
+    }
+}
+
+void SimpleRender::check_visibility()
+{
     glDisable(GL_LIGHTING);
     glDisable(GL_DITHER);
     unsigned char color_r = 0;
@@ -59,38 +66,23 @@ inline void check_visibility()
     }
     glEnd();
     glReadBuffer(GL_BACK);
-    glReadPixels(0,0,render_->width_, render_->height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
-    render_->pq_->update(pixels_, render_->width_*render_->height_*3);
+    glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+    pq_->update(pixels_, width_*height_*3);
     glEnable(GL_LIGHTING);
     glEnable(GL_DITHER);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
 
-void draw_surface_with_arrays()
+void SimpleRender::draw_surface_with_arrays()
 {
-    Gfmesh *gfmesh_ = render_->gfmesh_;
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_DOUBLE, 0, gfmesh_->vertex_array());
     
-    if (render_->pq_ != 0 && render_->to_check_visibility_)
+    if (pq_ != 0 && to_check_visibility_)
     {
         check_visibility();
-        /*
-        for (int i = 0; i < 300; i++)
-        {
-            std::cout << render_->pq_->pop() << "\n";
-        }
-        */
     }
     
-    if (render_->smooth_ || render_->interpolated_)
-    {
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glNormalPointer(GL_DOUBLE, 0, gfmesh_->vertex_normal_array());
-        glDrawElements(GL_TRIANGLES, 3*gfmesh_->face_number(),GL_UNSIGNED_INT, gfmesh_->face_array());
-    }
-    else
-    {
         glDisableClientState(GL_NORMAL_ARRAY);
         glBegin(GL_TRIANGLES);
         for (size_t i=0; i< gfmesh_->face_number(); i++)
@@ -104,34 +96,32 @@ void draw_surface_with_arrays()
                 glArrayElement(v3);
         }
         glEnd();
-    }
-    glReadPixels(0,0,render_->width_, render_->height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+    glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
 }
 
-void disp()
+void SimpleRender::disp()
 {
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     glShadeModel(GL_FLAT);
 
     glPushMatrix();
-    glTranslated(render_->dx_, render_->dy_, render_->dz_);
-    glRotated(render_->angle_x_, 1.0, 0.0, 0.0);
-    glRotated(render_->angle_y_, 0.0, 1.0, 0.0);
-    glRotated(render_->angle_z_, 0.0, 0.0, 1.0);
-    glScaled (render_->scale_, render_->scale_, render_->scale_);
+    glTranslated(dx_, dy_, dz_);
+    glRotated(angle_x_, 1.0, 0.0, 0.0);
+    glRotated(angle_y_, 0.0, 1.0, 0.0);
+    glRotated(angle_z_, 0.0, 0.0, 1.0);
+    glScaled (scale_, scale_, scale_);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     draw_surface_with_arrays();
     glutSwapBuffers();
     glPopMatrix();
 }
 
-void outputImage(unsigned char *pixels, int width, int height,  std::ostream& os)
+void SimpleRender::outputImage(std::ostream& os)
 {
 
-    //output pgm file contains Y
-    os<<"P5 "<<width<<" "<<height<<" 255"<<std::endl;
-    unsigned char* ptr = pixels;
-    for (size_t i = 0; i< size_t(width*height); i++)
+    os<<"P5 "<<width_<<" "<<height_<<" 255"<<std::endl;
+    unsigned char* ptr = pixels_;
+    for (size_t i = 0; i< size_t(width_*height_); i++)
     {
             unsigned char r = *(ptr++);
             unsigned char g = *(ptr++);
@@ -141,36 +131,37 @@ void outputImage(unsigned char *pixels, int width, int height,  std::ostream& os
     }
 }
 
-void reshape(int w, int h)
+void SimpleRender::reshape(int w, int h)
 {
     if (h==0) h = 1;
     if (w==0) w = 1;
-    render_->width_ = w;
-    render_->height_= h;
+    width_ = w;
+    height_= h;
     double ratio = 1.0 * w / h;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glViewport(0, 0 , w , h);
 
-    gluPerspective(render_->view_angle_, ratio, render_->min_distance_, render_->max_distance_);
+    gluPerspective(view_angle_, ratio, min_distance_, max_distance_);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(render_->view_x_, render_->view_y_, render_->view_z_, render_->view_x_, render_->view_y_, render_->view_z_-2*render_->bounding_length_, 0.0, 1.0, 0.0);
+    gluLookAt(view_x_, view_y_, view_z_, view_x_, view_y_, view_z_-2*bounding_length_, 0.0, 1.0, 0.0);
     return;
 }
 
-void do_main(int interval)
+void SimpleRender::do_main(int interval)
 {
     static int counter = 0;
     static std::deque<VertexID> vertices_to_split;
     if (counter == 0)
     {
         std::ofstream ofs("final_image.pgm");
-        outputImage(pixels_, render_->width_, render_->height_, ofs);
+        outputImage(ofs);
         ofs.close();
-        render_->gfmesh_ = render_->mesh_begin_;
-        render_->to_check_visibility_ = true;
+        gfmesh_ = mesh_begin_;
+        to_check_visibility_ = true;
+        interval = 100;
     }
     else 
     {
@@ -178,33 +169,33 @@ void do_main(int interval)
         {
             VertexID id = 0;
             int count = 0; 
-            while((id = render_->pq_->pop()) != 0 && count < 15000)
+            while((id = pq_->pop()) != 0 && count < 15000)
             {
-                if (render_->split_map_.find(id) != render_->split_map_.end())
+                if (split_map_.find(id) != split_map_.end())
                 {
                     vertices_to_split.push_back(id);
                     count ++;
                 }
             }
-            render_->to_check_visibility_ = false;
+            to_check_visibility_ = false;
         }
         else if (!vertices_to_split.empty())
         {
             VertexID id = vertices_to_split.front();
             vertices_to_split.pop_front();
             size_t pos = 0;
-            std::cerr << "id " << id;
-            std::map<VertexID, BitString>::const_iterator it = render_->split_map_.find(id);
-            if (it != render_->split_map_.end())
+            //std::cerr << "id " << id;
+            std::map<VertexID, BitString>::const_iterator it = split_map_.find(id);
+            if (it != split_map_.end())
             {
-                std::cerr << it->second;
-                render_->gfmesh_->decode(id, it->second, &pos);
-                render_->gfmesh_->update();
+                //std::cerr << it->second;
+                gfmesh_->decode(id, it->second, &pos);
+                gfmesh_->update();
                 glutPostRedisplay();
             }
-            std::cerr << std::endl;
+            //std::cerr << std::endl;
         }
-        else
+        else if (counter > 1)
         {
             exit(0);
         }
@@ -213,26 +204,19 @@ void do_main(int interval)
         {
             std::string str;
             std::stringstream sstr(str);
-            sstr << render_->prefix_ << "_output_image_" << counter / 300 <<".pgm";
+            sstr << prefix_ << "_output_image_" << counter / 300 <<".pgm";
             std::cerr << sstr.str().c_str() << std::endl;
             std::ofstream ofs(sstr.str().c_str());
-            outputImage(pixels_, render_->width_, render_->height_, ofs);
+            outputImage(ofs);
             ofs.close();
         }
     }
     counter ++;
-    glutTimerFunc(interval, do_main, interval);
+    //glutTimerFunc(interval, do_main, interval);
 }
 
-SimpleRender::SimpleRender(int& argc, char *argv[], const char *name, Gfmesh *gfmesh_final, Vdmesh *gfmesh_begin, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix) 
-        :gfmesh_(gfmesh_final), mesh_begin_(gfmesh_begin), split_map_(split_map), pq_(pq), prefix_(prefix), \
-        view_angle_(45), \
-        min_distance_(0.01), max_distance_(5000),\
-        view_x_(0), view_y_(0), view_z_(0), dx_(0), dy_(0), dz_(0), angle_x_(0), \
-        angle_y_(0), angle_z_(0), scale_(1), bounding_length_(1), mouse_button_(0),\
-        mouse_previous_x_(0), mouse_previous_y_(0),mouse_last_x_(0),mouse_last_y_(0) ,width_(500), height_(500), \
-        smooth_(false), interpolated_(false), perspective_(true), \
-        outline_(false), fill_(true), \
+SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Gfmesh *gfmesh_final, Vdmesh *gfmesh_begin, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix) 
+        :BasicRender(argc, argv, name, false), gfmesh_(gfmesh_final), mesh_begin_(gfmesh_begin), split_map_(split_map), pq_(pq), prefix_(prefix), \
         to_output_(false), to_check_visibility_(false)
 {
 
@@ -288,40 +272,15 @@ SimpleRender::SimpleRender(int& argc, char *argv[], const char *name, Gfmesh *gf
     min_distance_ = 0.01 * view_z_;
     max_distance_ = 100 * view_z_;
 
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH);
-    glutInitWindowSize(500, 500);
-    glutInitWindowPosition(500, 300);
-    glutCreateWindow(name);
+    display_mode_ = GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH;
+    width_ = 500;
+    height_ = 500;
+    pos_x_  = 500;
+    pos_y_  = 300;
+    framerate_ = 50;
 
-    glutDisplayFunc(disp);
-    glutReshapeFunc(reshape);
-    glutTimerFunc(50, do_main, 50);
-    //glutIdleFunc(do_main);
-
-    glClearColor(0., 0., 0., 0.);
-
-
-    //normal
-    GLfloat mat_specular[] = {0.3, 0.3, 0.3, 0.0};
-    GLfloat mat_shininess[]  = {100};
-    GLfloat light_position[] = {0.0, 0.0, 1.0, 0.0};
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS,mat_shininess);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    initGlut(argc, argv);
     
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_NORMALIZE);
-
-    render_ = this;
     std::cerr<<view_x_<<" "<<view_y_<<" "<<view_z_<<" "<<std::endl;
     std::cerr<<bounding_length_<<std::endl;
-}
-
-void SimpleRender::enterMainLoop()
-{
-    glutMainLoop();
 }

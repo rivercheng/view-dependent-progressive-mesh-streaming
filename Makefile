@@ -7,14 +7,14 @@ OBJ = ppmesh.o bitstring.o vertexid.o common_def.o gfmesh.o vertexpq.o
 all: $(ALL)
 tags: *.cc *.hh
 	$(CTAG) -R *
-test_render:test_render.o $(OBJ) render.o
+test_render:test_render.o $(OBJ) render.o basicrender.o
 	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
-test_history:test_history.o $(OBJ) render.o
+test_history:test_history.o $(OBJ) render.o basicrender.o
 	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
 test_pq:test_pq.o $(OBJ) render.o
 	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
-best_image:best_image.o $(OBJ) simple_render.o
-	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) simple_render.o
+best_image:best_image.o $(OBJ) simple_render.o basicrender.o
+	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) simple_render.o basicrender.o
 %:%.o $(OBJ)
 	$(CC) $(OPTIONS) $(LIBRARY) -o $@ $< $(OBJ)
 %.o:%.cc 
@@ -26,8 +26,9 @@ depend:
 	makedepend -Y *.cc
 # DO NOT DELETE
 
-best_image.o: simple_render.hh vertexid.hh bitstring.hh gfmesh.hh
-best_image.o: common_def.hh vertexpq.hh vdmesh.hh
+basicrender.o: basicrender.hh vertexid.hh bitstring.hh common_def.hh
+best_image.o: simple_render.hh vertexid.hh bitstring.hh basicrender.hh
+best_image.o: common_def.hh gfmesh.hh vertexpq.hh vdmesh.hh
 bitstring.o: bitstring.hh
 common_def.o: common_def.hh
 gfmesh.o: gfmesh.hh common_def.hh vertexid.hh bitstring.hh ppmesh.hh
@@ -35,10 +36,8 @@ gfmesh.o: huffman.hh
 ppmesh.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
 render.o: render.hh gfmesh.hh common_def.hh vertexid.hh bitstring.hh
 render.o: vertexpq.hh vdmesh.hh
-render_basic.o: render.hh gfmesh.hh common_def.hh vertexid.hh bitstring.hh
-render_basic.o: vertexpq.hh vdmesh.hh
-simple_render.o: simple_render.hh vertexid.hh bitstring.hh gfmesh.hh
-simple_render.o: common_def.hh vertexpq.hh vdmesh.hh
+simple_render.o: simple_render.hh vertexid.hh bitstring.hh basicrender.hh
+simple_render.o: common_def.hh gfmesh.hh vertexpq.hh vdmesh.hh
 test_gfmesh.o: gfmesh.hh common_def.hh vertexid.hh bitstring.hh
 test_history.o: render.hh vdmesh.hh common_def.hh vertexid.hh bitstring.hh
 test_history.o: gfmesh.hh

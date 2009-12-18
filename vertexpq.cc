@@ -32,6 +32,7 @@ void VertexPQ::stat_screen_area(unsigned char *pixels, size_t size)
         int importance = vdmesh_->face_importance(i);
         if (importance != 0)
         {
+            assert(importance > 0);
             VertexIndex v1 = vdmesh_->vertex1_in_face(i);
             VertexIndex v2 = vdmesh_->vertex2_in_face(i);
             VertexIndex v3 = vdmesh_->vertex3_in_face(i);
@@ -53,8 +54,10 @@ void VertexPQ::update(unsigned char* pixels, size_t size)
     stat_screen_area(pixels, size);
     for (size_t i = 0; i <  vdmesh_->vertex_number(); i++)
     {
+        std::cerr<<"vertex "<<i<<" "<<" visible: "<<vdmesh_->vertex_is_visible(i)<<" importance "<<vdmesh_->vertex_importance(i)<<std::endl;
         if (vdmesh_->vertex_is_visible(i))
         {
+            assert(vdmesh_->vertex_importance(i) > 0);
             index_queue_.push_back(i);
         }
     }
@@ -80,7 +83,7 @@ VertexIndex VertexPQ::pop()
     {
         if (mode_ == Level)
         {
-            std::pop_heap(index_queue_.begin(), index_queue.end(), CompareLevel(vdmesh_));
+            std::pop_heap(index_queue_.begin(), index_queue_.end(), CompareLevel(vdmesh_));
         }
         else if (mode_ == ScreenArea)
         {

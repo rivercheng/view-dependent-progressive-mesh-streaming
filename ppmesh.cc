@@ -443,7 +443,7 @@ bool Ppmesh::splitVs(splitInfo split, bool temp)
     {
         std::cerr<< mesh_.deref(v1).id << " " <<split.id<<std::endl;
     }
-    assert(mesh_.deref(v1).id == split.id);
+    //assert(mesh_.deref(v1).id == split.id);
 
     MyMesh::Point p1 = mesh_.point(v1);
     double x1 = p1[0];

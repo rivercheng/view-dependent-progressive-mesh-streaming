@@ -394,7 +394,7 @@ void timer(int value)
     glutTimerFunc(1000/value, timer, value);
 }
 
-Render::Render(int& argc, char *argv[], const char *name, Gfmesh *gfmesh, int framerate, VertexPQ *pq) 
+Render::Render(int argc, char *argv[], const char *name, Gfmesh *gfmesh, int framerate, VertexPQ *pq) 
         :gfmesh_(gfmesh), pq_(pq), view_angle_(45), \
         min_distance_(0.01), max_distance_(5000),\
         view_x_(0), view_y_(0), view_z_(0), dx_(0), dy_(0), dz_(0), angle_x_(0), \
