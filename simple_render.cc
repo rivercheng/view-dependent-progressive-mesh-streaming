@@ -216,7 +216,7 @@ void SimpleRender::do_main(int interval)
 }
 
 SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Gfmesh *gfmesh_final, Vdmesh *gfmesh_begin, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix) 
-        :BasicRender(argc, argv, name, false), gfmesh_(gfmesh_final), mesh_begin_(gfmesh_begin), split_map_(split_map), pq_(pq), prefix_(prefix), \
+        :BaseRender(argc, argv, name, false), gfmesh_(gfmesh_final), mesh_begin_(gfmesh_begin), split_map_(split_map), pq_(pq), prefix_(prefix), \
         to_output_(false), to_check_visibility_(false)
 {
 

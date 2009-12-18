@@ -1,5 +1,5 @@
-#ifndef __BASIC_PRENDER_HH__
-#define __BASIC_PRENDER_HH__
+#ifndef __BASE_PRENDER_HH__
+#define __BASE_PRENDER_HH__
 
 #include <list>
 #include <map>
@@ -7,12 +7,12 @@
 #include "common_def.hh"
 
 class Gfmesh;
-class BasicRender
+class BaseRender
 {
 public:
-    BasicRender(int argc, char **argv, const char *name, bool auto_init);
+    BaseRender(int argc, char **argv, const char *name, bool auto_init);
 
-    virtual ~BasicRender(){;}
+    virtual ~BaseRender(){;}
 
     void enterMainLoop();
 
@@ -67,8 +67,8 @@ public:
 
 private:
     //Non copiable.
-    BasicRender(const BasicRender&);
-    BasicRender& operator=(const BasicRender&);
+    BaseRender(const BaseRender&);
+    BaseRender& operator=(const BaseRender&);
 
 private:
     enum Type
@@ -148,10 +148,10 @@ protected:
     //=============Static Wrappers to be used as C callback functions
     
 private:
-    static BasicRender *instance;
+    static BaseRender *instance;
 
 public:
-    static void activateInstance(BasicRender* render)
+    static void activateInstance(BaseRender* render)
     {
         instance = render;
     }

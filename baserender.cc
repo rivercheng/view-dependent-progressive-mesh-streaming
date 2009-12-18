@@ -5,10 +5,10 @@
 #include <cstdlib>
 #include <sstream>
 #include <deque>
-#include "basicrender.hh"
+#include "baserender.hh"
 #include "common_def.hh"
-BasicRender *BasicRender::instance = 0;
-BasicRender::BasicRender(int argc, char *argv[], const char *name, bool auto_init) 
+BaseRender *BaseRender::instance = 0;
+BaseRender::BaseRender(int argc, char *argv[], const char *name, bool auto_init) 
     :display_mode_(GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH), \
      pos_x_(500), pos_y_(300), name_(name), width_(500), height_(500),\
      framerate_(60), \
@@ -20,6 +20,7 @@ BasicRender::BasicRender(int argc, char *argv[], const char *name, bool auto_ini
         smooth_(false), interpolated_(false), perspective_(true), \
         outline_(false), fill_(true)
 {
+    instance = this;
     if (auto_init)
     {
         initGlut(argc, argv);
@@ -27,7 +28,7 @@ BasicRender::BasicRender(int argc, char *argv[], const char *name, bool auto_ini
 }
 
 
-void BasicRender::initGlut(int argc, char** argv)
+void BaseRender::initGlut(int argc, char** argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(display_mode_);
@@ -49,7 +50,7 @@ void BasicRender::initGlut(int argc, char** argv)
     set_client_status();
 }
 
-void BasicRender::set_materials()
+void BaseRender::set_materials()
 {
     GLfloat mat_specular[] = {0.3, 0.3, 0.3, 0.0};
     GLfloat mat_shininess[] = {100};
@@ -57,13 +58,13 @@ void BasicRender::set_materials()
     glMaterialfv(GL_FRONT, GL_SHININESS,mat_shininess);
 }
 
-void BasicRender::set_lights()
+void BaseRender::set_lights()
 {
     GLfloat light_position[] = {0.0, 0.0, 1.0, 0.0};
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 }
 
-void BasicRender::set_client_status()
+void BaseRender::set_client_status()
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -72,12 +73,12 @@ void BasicRender::set_client_status()
     glEnable(GL_NORMALIZE);
 }
 
-void BasicRender::enterMainLoop()
+void BaseRender::enterMainLoop()
 {
     glutMainLoop();
 }
 
-void BasicRender::auto_center(size_t count, Coordinate *vertex_array)
+void BaseRender::auto_center(size_t count, Coordinate *vertex_array)
 {
     Coordinate center_x = 0;
     Coordinate center_y = 0;

@@ -4,13 +4,13 @@
 #include <list>
 #include <map>
 #include "vertexid.hh"
-#include "basicrender.hh"
+#include "baserender.hh"
 class Gfmesh;
 class Vdmesh;
 class VertexPQ;
 class BitString;
 
-class SimpleRender : public BasicRender
+class SimpleRender : public BaseRender
 {
 public:
     SimpleRender(int argc, char *argv[], const char *name, Gfmesh *mesh, Vdmesh *mesh2, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix);
