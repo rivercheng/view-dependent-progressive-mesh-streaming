@@ -12,13 +12,13 @@ class BaseRender
 public:
     BaseRender(int argc, char **argv, const char *name, bool auto_init);
 
-    virtual ~BaseRender(){;}
+    virtual ~BaseRender(){instance = 0;}
 
     void enterMainLoop();
 
     virtual void initGlut(int argc, char** argv);
 
-    void auto_center(size_t count, Coordinate *vertex_array);
+    void auto_center(size_t count, const Coordinate *vertex_array);
     
     void set_center(double center_x, double center_y, double center_z, double distance)
     {
@@ -39,6 +39,31 @@ public:
         scale_   = scale;
     }
 
+    void setSmooth(bool value)
+    {
+        smooth_ = value;
+    }
+    
+    void setInterPolated(bool value)
+    {
+        interpolated_ = value;
+    }
+    
+    void setPerspective(bool value)
+    {
+        perspective_ = value;
+    }
+    
+    void setOutline(bool value)
+    {
+        outline_ = value;
+    }
+    
+    void setFill(bool value)
+    {
+        fill_ = value;
+    }
+    
     int width()
     {
         return width_;
@@ -70,7 +95,7 @@ private:
     BaseRender(const BaseRender&);
     BaseRender& operator=(const BaseRender&);
 
-private:
+protected:
     enum Type
     {
         NORMAL,
@@ -83,29 +108,6 @@ private:
         ALT,
         CTRL,
     };
-
-    enum Key
-    {
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT,
-        R,
-        Q,
-    };
-    
-    struct Action
-    {
-          long  time;
-          Type  type;
-          State state;
-           Key  key;
-           Action(long t, Type ty, State s, Key k):
-               time(t), type(ty), state(s), key(k){;}
-    };
-
-    typedef std::list<Action> Record;
-
 protected:
     int    display_mode_;
     int    pos_x_;
@@ -196,5 +198,8 @@ public:
     {
         instance->idle();
     }
+
+    //Render cannot be instantiated more than once.
+    class MultipleInstanceOfRender{};
 };
 #endif

@@ -20,7 +20,14 @@ BaseRender::BaseRender(int argc, char *argv[], const char *name, bool auto_init)
         smooth_(false), interpolated_(false), perspective_(true), \
         outline_(false), fill_(true)
 {
-    instance = this;
+    if (instance == 0)
+    {
+        instance = this;
+    }
+    else
+    {
+        throw MultipleInstanceOfRender();
+    }
     if (auto_init)
     {
         initGlut(argc, argv);
@@ -78,7 +85,7 @@ void BaseRender::enterMainLoop()
     glutMainLoop();
 }
 
-void BaseRender::auto_center(size_t count, Coordinate *vertex_array)
+void BaseRender::auto_center(size_t count, const Coordinate *vertex_array)
 {
     Coordinate center_x = 0;
     Coordinate center_y = 0;

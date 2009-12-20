@@ -219,66 +219,9 @@ SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Gfmesh *gfm
         :BaseRender(argc, argv, name, false), gfmesh_(gfmesh_final), mesh_begin_(gfmesh_begin), split_map_(split_map), pq_(pq), prefix_(prefix), \
         to_output_(false), to_check_visibility_(false)
 {
-
-    Coordinate center_x = 0;
-    Coordinate center_y = 0;
-    Coordinate center_z = 0;
-    Coordinate min_x = 0;
-    Coordinate max_x = 0;
-    Coordinate min_y = 0;
-    Coordinate max_y = 0;
-    Coordinate min_z = 0;
-    Coordinate max_z = 0;
-    Coordinate max_length = 0;
-
-    center_x = min_x = max_x = gfmesh_->vertex_array()[0];
-    center_y = min_y = max_y = gfmesh_->vertex_array()[1];
-    center_z = min_z = max_z = gfmesh_->vertex_array()[2];
-    for (size_t i=1; i < gfmesh_->vertex_number(); i++)
-    {
-        Coordinate x = gfmesh_->vertex_array()[3*i];
-        Coordinate y = gfmesh_->vertex_array()[3*i+1];
-        Coordinate z = gfmesh_->vertex_array()[3*i+2];
-
-        min_x = min_x > x ? x : min_x;
-        max_x = max_x < x ? x : max_x;
-
-        min_y = min_y > y ? y : min_y;
-        max_y = max_y < y ? y : max_y;
-
-        min_z = min_z > z ? z : min_z;
-        max_z = max_z < z ? z : max_z;
-    }
-    center_x = (max_x + min_x)/2;
-    center_y = (max_y + min_y)/2;
-    center_z = (max_z + min_z)/2;
-
-    max_length = max_x - min_x;
-    if (max_y - min_y > max_length)
-    {
-        max_length = max_y - min_y;
-    }
-    if (max_z - min_z > max_length)
-    {
-        max_length = max_z - min_z;
-    }
-    bounding_length_ = max_length;
-
-    double factor = 2;
-    left_distance_ = right_distance_ = top_distance_ = bottom_distance_ = factor*max_length*0.5;
-    view_x_ = center_x;
-    view_y_ = center_y;
-    view_z_ = center_z + 1.5*max_length;
-    min_distance_ = 0.01 * view_z_;
-    max_distance_ = 100 * view_z_;
-
-    display_mode_ = GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH;
-    width_ = 500;
-    height_ = 500;
-    pos_x_  = 500;
-    pos_y_  = 300;
+    auto_center(gfmesh_->vertex_number(), gfmesh_->vertex_array());
+    
     framerate_ = 50;
-
     initGlut(argc, argv);
     
     std::cerr<<view_x_<<" "<<view_y_<<" "<<view_z_<<" "<<std::endl;

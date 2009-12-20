@@ -8,11 +8,11 @@ all: $(ALL)
 tags: *.cc *.hh
 	$(CTAG) -R *
 test_render:test_render.o $(OBJ) render.o baserender.o
-	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
+	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o baserender.o
 test_history:test_history.o $(OBJ) render.o baserender.o
-	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
+	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o baserender.o
 test_pq:test_pq.o $(OBJ) render.o
-	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o
+	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) render.o baserender.o
 best_image:best_image.o $(OBJ) simple_render.o baserender.o
 	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) simple_render.o baserender.o
 %:%.o $(OBJ)
