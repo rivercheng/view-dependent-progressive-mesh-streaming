@@ -97,6 +97,7 @@ void SimpleRender::draw_surface_with_arrays()
         }
         glEnd();
     glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+    rendered_ = true;
 }
 
 void SimpleRender::disp()
@@ -150,18 +151,45 @@ void SimpleRender::reshape(int w, int h)
     return;
 }
 
-void SimpleRender::do_main(int interval)
+void SimpleRender::idle()
+{
+    if (pq_ == 0)
+    {
+        output_best_image();
+    }
+    else
+    {
+        do_main();
+    }
+}
+
+void SimpleRender::output_best_image(void)
+{
+    std::string output_name = prefix_ + "final_image.pgm";
+    std::ofstream ofs(output_name.c_str());
+    outputImage(ofs);
+    ofs.close();
+    exit(0);
+}
+
+
+void SimpleRender::do_main()
 {
     static int counter = 0;
     static std::deque<VertexID> vertices_to_split;
     if (counter == 0)
     {
-        std::ofstream ofs("final_image.pgm");
+        std::string output_name = prefix_ + "final_image.pgm";
+        std::ofstream ofs(output_name.c_str());
         outputImage(ofs);
         ofs.close();
         gfmesh_ = mesh_begin_;
         to_check_visibility_ = true;
-        interval = 100;
+        glutPostRedisplay();
+    }
+    else if (!rendered_)
+    {
+        return;
     }
     else 
     {
@@ -212,12 +240,12 @@ void SimpleRender::do_main(int interval)
         }
     }
     counter ++;
-    //glutTimerFunc(interval, do_main, interval);
+    rendered_ = false;
 }
 
 SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Gfmesh *gfmesh_final, Vdmesh *gfmesh_begin, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix) 
         :BaseRender(argc, argv, name, false), gfmesh_(gfmesh_final), mesh_begin_(gfmesh_begin), split_map_(split_map), pq_(pq), prefix_(prefix), \
-        to_output_(false), to_check_visibility_(false)
+        to_output_(false), to_check_visibility_(false), rendered_(false)
 {
     auto_center(gfmesh_->vertex_number(), gfmesh_->vertex_array());
     

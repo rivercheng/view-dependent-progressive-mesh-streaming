@@ -24,6 +24,7 @@ private:
     std::string prefix_;
     bool to_output_;
     bool to_check_visibility_;
+    bool rendered_;
     
     virtual void disp(void);
     virtual void reshape(int w, int h);
@@ -32,10 +33,12 @@ private:
     virtual void mouse(int, int, int, int){return;}
     virtual void motion(int, int) {return;}
     virtual void timer(int) {return;}
+    virtual void idle(void);
     
     void outputImage(std::ostream& os);
+    void output_best_image(void);
     void draw_surface_with_arrays(void);
-    void do_main(int interval);
+    void do_main(void);
     void check_visibility(void);
 };
 #endif

@@ -14,7 +14,6 @@ int main(int argc, char** argv)
 
     //Generate two identical vdmeshes.
     Vdmesh mesh(ifs);
-    Vdmesh mesh2(mesh);
 
     size_t count = mesh.n_detail_vertices();
     
@@ -30,10 +29,6 @@ int main(int argc, char** argv)
     // read in the initial viewpoint
     ifs2 >> dx >> dy >> dz >> ax >> ay >> az >> scale;
 
-    typedef std::map<VertexID, BitString> VertexSplitMap;
-    typedef std::map<VertexID, BitString>::const_iterator VertexSplitMapConstIter;
-    VertexSplitMap vertex_splits;
-    
     // Decode the mesh to the final state
     for (size_t i = 0; i < count; i++)
     {
@@ -46,49 +41,11 @@ int main(int argc, char** argv)
         data.read_binary(ifs, len);
         mesh.decode(id, data, &pos);
         
-        // save the vertex splits for later usage.
-        vertex_splits[id] = data;
     }
     mesh.update();
     
-    // Decode the mesh2 according to the history stored in the input file.
-    while(true)
-    {
-        VertexID id;
-        ifs2 >> id;
-        if (ifs2.eof() || ifs2.fail())
-        {
-            break;
-        }
-        size_t pos = 0;
-        VertexSplitMapConstIter it = vertex_splits.find(id);
-        if (it != vertex_splits.end())
-        {
-            //std::cout << id << std::endl;
-            mesh2.decode(id, it->second, &pos);
-            mesh2.update();
-        }
-    }
-    mesh2.update();
-
-    //improve the quality. Split  to at least level 3
-    for (int i = 0; i < 3; i++)
-    {
-        for (size_t index = 0; index < mesh2.vertex_number(); index++)
-        {
-            VertexID id = mesh2.index2id(index);
-            VertexSplitMapConstIter it = vertex_splits.find(id);
-            size_t pos = 0;
-            if (mesh2.id2level(id) < 3 && it != vertex_splits.end())
-            {
-                std::cerr << "id " << id << " index " << index << std::endl;
-                mesh2.decode(id, it->second, &pos);
-            }
-        }
-    }
-
-    VertexPQ pq(&mesh2, Level);
-    SimpleRender render(argc, argv, argv[1], &mesh, &mesh2, vertex_splits, &pq, argv[2]);
+    std::map<VertexID, BitString> vertex_splits;
+    SimpleRender render(argc, argv, argv[1], &mesh, 0, vertex_splits, 0, argv[2]);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();
 }
