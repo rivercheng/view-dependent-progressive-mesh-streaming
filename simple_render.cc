@@ -165,11 +165,15 @@ void SimpleRender::idle()
 
 void SimpleRender::output_best_image(void)
 {
-    std::string output_name = prefix_ + "final_image.pgm";
-    std::ofstream ofs(output_name.c_str());
-    outputImage(ofs);
-    ofs.close();
-    exit(0);
+    std::cerr << "in output" << std::endl;
+    if (rendered_)
+    {
+        std::string output_name = prefix_ + "_final_image.pgm";
+        std::ofstream ofs(output_name.c_str());
+        outputImage(ofs);
+        ofs.close();
+        exit(0);
+    }
 }
 
 

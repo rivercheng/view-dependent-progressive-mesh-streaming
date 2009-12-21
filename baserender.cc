@@ -50,6 +50,7 @@ void BaseRender::initGlut(int argc, char** argv)
     glutMouseFunc(mouseWrapper);
     glutMotionFunc(motionWrapper);
     glutTimerFunc(1000./framerate_, timerWrapper, framerate_);
+    glutIdleFunc(idleWrapper);
 
     glClearColor(0, 0, 0, 0);
     set_materials();
