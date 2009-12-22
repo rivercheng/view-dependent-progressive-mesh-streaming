@@ -446,9 +446,16 @@ bool Ppmesh::splitVs(splitInfo split)
     DEBUG(mesh_.deref(v1).id);
     if (mesh_.deref(v1).id != split.id)
     {
-        std::cerr<< mesh_.deref(v1).id << " " <<split.id<<std::endl;
+        if (mesh_.deref(v1).id / split.id * split.id == mesh_.deref(v1).id)
+        {
+            return true; //the vertex is already split
+        }
+        else
+        {
+            std::cerr<< mesh_.deref(v1).id << " " <<split.id<<std::endl;
+            assert(mesh_.deref(v1).id == split.id);
+        }
     }
-    assert(mesh_.deref(v1).id == split.id);
 
     MyMesh::Point p1 = mesh_.point(v1);
     double x1 = p1[0];
@@ -528,6 +535,7 @@ bool Ppmesh::splitVs(splitInfo split)
     DEBUG(id_l);
     DEBUG(id_r);
 
+    to_be_split_.erase(split.id);
     if (id_l == id_r)
     {
         // We have to delay the split since the
@@ -857,6 +865,39 @@ void Ppmesh::set_report_arrays(
     affected_vertex_indices_ = &affected_vertex_indices;
     affected_faces_          = &affected_faces;
 }
+
+VertexID Ppmesh::index2id(VertexIndex index) const
+{
+    MyMesh::VertexHandle vh(index);
+    return mesh_.deref(vh).id;
+}
+
+VertexIndex Ppmesh::id2index(VertexID id) const
+{
+    MapConstIter it = map_.find(id);
+    if (it != map_.end())
+    {
+        return it->second.v;
+    }
+    else
+    {
+        throw InvalidID();
+    }
+}
+
+VertexID Ppmesh::to_be_split(void)
+{
+    VertexID  id = 0;
+    if (!to_be_split_.empty())
+    {
+        id = *(to_be_split_.begin());
+        to_be_split_.erase(to_be_split_.begin());
+    }
+    return id;
+}
+
+
+
 
 
 

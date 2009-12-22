@@ -193,3 +193,28 @@ void Gfmesh::update()
     vertex_index_set.clear();
     face_map.clear();
 }
+        
+size_t Gfmesh::n_detail_vertices() const
+{
+    return ppmesh_->n_detail_vertices();
+}
+
+unsigned int Gfmesh::id2level(VertexID id) const
+{
+    return ppmesh_->id2level(id);
+}
+
+VertexID Gfmesh::index2id(VertexIndex index) const
+{
+    return ppmesh_->index2id(index);
+}
+
+VertexIndex Gfmesh::id2index(VertexID id) const
+{
+    return ppmesh_->id2index(id);
+}
+
+VertexID Gfmesh::to_be_split()
+{
+    return ppmesh_->to_be_split();
+}

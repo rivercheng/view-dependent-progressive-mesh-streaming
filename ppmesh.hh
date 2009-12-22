@@ -20,8 +20,7 @@
 class BitString;
 class Ppmesh
 {
-    // using namespace OpenMesh;
-    // using namespace OpenMesh::Attributes;
+// ============================INTERFACE====================================
     public:
     /**
      * to create a ppmesh by reading data from ifs.
@@ -73,28 +72,56 @@ class Ppmesh
     /**
      * output all the vertices connected to a given vertex (one-ring neighbor).
      */
-    void    vertex_vertices(VertexIndex vertex_index, \
-            std::vector<VertexIndex>& vertex_array) const;
+    void vertex_vertices(VertexIndex vertex_index, \
+                         std::vector<VertexIndex>& vertex_array) const;
 
     /**
      * output the vertices within a given face to vertex_array.
      */
-    void    face_vertices(FaceIndex face_index, \
-                          std::vector<VertexIndex>& vertex_array) const;
+    void face_vertices(FaceIndex face_index, \
+                       std::vector<VertexIndex>& vertex_array) const;
 
     /**
      * output the neighbor faces of the given vertex to face_array.
      */
-    void    vertex_faces(VertexIndex vertex_index, \
-                         std::vector<FaceIndex>& face_array) const;
+    void vertex_faces(VertexIndex vertex_index, \
+                      std::vector<FaceIndex>& face_array) const;
 
     /**
      * output all the vertices and faces in the ppmesh to vertex_array and face_array.
      */
-    void    output_arrays(std::vector<Vertex>& vertex_array, \
-                          std::vector<Face>& face_array) const;
+    void output_arrays(std::vector<Vertex>& vertex_array, \
+                       std::vector<Face>& face_array) const;
 
+    /**
+     * output the number of details
+     */
+    size_t n_detail_vertices(void)
+    {
+        return n_detail_vertices_;
+    }
 
+    /**
+     * Deduce the level of the vertex from its ID.
+     */
+    unsigned int id2level(VertexID id) const;
+
+    /**
+     * Deduce the ID of a vertex from its Index.
+     */
+    VertexID index2id(VertexIndex index) const;
+
+    /**
+     * Deduce the index of a vertex from its ID.
+     */
+    VertexIndex id2index(VertexID id) const;
+
+    /**
+     * Return a vertex id that required to be split for splitting pending splits.
+     */
+    VertexID to_be_split(void);
+
+// =======================================PRIVATE PART==================================//
     private:  // private types
 
     // So the vertices include two extra attributes: id and level.
@@ -109,9 +136,9 @@ class Ppmesh
         VertexTraits
         {
         public:
-        // the id to represent the position in the binary trees.
-        unsigned int id;
-        unsigned int level;
+            // the id to represent the position in the binary trees.
+            unsigned int id;
+            unsigned int level;
         };
     };
 
@@ -208,9 +235,6 @@ class Ppmesh
     
     // read base file from ifs
     void         readBase(std::istream& ifs);
-
-    // find the level of a given id
-    unsigned int id2level(VertexID id) const;
 
     // to split a vertex split. Return true if it is split.
     // Return false if it is buffered.
