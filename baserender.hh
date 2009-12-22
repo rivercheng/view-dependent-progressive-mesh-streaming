@@ -78,22 +78,20 @@ public:
     virtual void set_lights(void);
     virtual void set_client_status(void);
 
-    virtual void disp(void) = 0;
-    virtual void reshape(int width, int height) = 0;
-    virtual void keyboard(unsigned char key, int x, int y) = 0;
-    virtual void special(int key, int x, int y) = 0;
-    virtual void mouse(int button, int state, int x, int y) = 0;
-    virtual void motion(int x, int y) = 0;
-    virtual void timer(int value) = 0;
-    virtual void idle(void)
-    {
-        ;
-    }
+    virtual void disp(void);
+    virtual void reshape(int width, int height);
+    virtual void keyboard(unsigned char, int, int){return;}
+    virtual void special(int, int, int) {return;}
+    virtual void mouse(int, int, int, int){return;}
+    virtual void motion(int, int){return;}
+    virtual void timer(int){return;}
+    virtual void idle(void){return;}
 
 private:
     //Non copiable.
     BaseRender(const BaseRender&);
     BaseRender& operator=(const BaseRender&);
+    virtual void draw_surface_with_arrays(void) = 0;
 
 protected:
     enum Type

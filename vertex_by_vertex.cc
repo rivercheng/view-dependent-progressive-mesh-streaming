@@ -5,11 +5,31 @@
 #include <cstdlib>
 int main(int argc, char** argv)
 {
+    int total_count = 20000;
+    int initial_size = 1;
+    int batch_size  = 1;
+    
     if (argc < 3)
     {
-        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history>"<<std::endl;
+        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [total_count=20000] [initial_size=1] [batch_size=1]"<<std::endl;
         exit(1);
     }
+
+    if (argc > 3)
+    {
+        total_count = atoi(argv[3]);
+    }
+
+    if (argc > 4)
+    {
+        initial_size = atoi(argv[4]);
+    }
+
+    if (argc > 5)
+    {
+        batch_size = atoi(argv[5]);
+    }
+
     std::ifstream ifs(argv[1]);
 
 
@@ -95,7 +115,7 @@ int main(int argc, char** argv)
     std::cerr << "force split" << std::endl;
     
     VertexPQ pq(&mesh, ScreenArea, &vertex_splits);
-    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, &pq, argv[2]);
+    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, &pq, argv[2], initial_size, batch_size, total_count);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();
 }

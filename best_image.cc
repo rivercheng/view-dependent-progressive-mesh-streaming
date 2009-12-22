@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     mesh.update();
     
     std::map<VertexID, BitString> vertex_splits;
-    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, 0, argv[2]);
+    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, 0, argv[2], 1, 1, 1);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();
 }

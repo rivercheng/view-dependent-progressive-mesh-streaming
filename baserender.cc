@@ -141,3 +141,54 @@ void BaseRender::auto_center(size_t count, const Coordinate *vertex_array)
     max_distance_ = 100 * view_z_;
 }
 
+void BaseRender::disp()
+{
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    if (smooth_)
+    {
+        glShadeModel(GL_SMOOTH);
+    }
+    else
+    {
+        glShadeModel(GL_FLAT);
+    }
+
+    glPushMatrix();
+    glTranslated(dx_, dy_, dz_);
+    glRotated(angle_x_, 1.0, 0.0, 0.0);
+    glRotated(angle_y_, 0.0, 1.0, 0.0);
+    glRotated(angle_z_, 0.0, 0.0, 1.0);
+    glScaled (scale_, scale_, scale_);
+    if (fill_)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        draw_surface_with_arrays();
+    }
+    if (outline_)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        draw_surface_with_arrays();
+    }
+    glutSwapBuffers();
+    glPopMatrix();
+}
+
+
+void BaseRender::reshape(int w, int h)
+{
+    if (h==0) h = 1;
+    if (w==0) w = 1;
+    width_ = w;
+    height_= h;
+    double ratio = 1.0 * w / h;
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glViewport(0, 0 , w , h);
+
+    gluPerspective(view_angle_, ratio, min_distance_, max_distance_);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(view_x_, view_y_, view_z_, view_x_, view_y_, view_z_-2*bounding_length_, 0.0, 1.0, 0.0);
+    return;
+}

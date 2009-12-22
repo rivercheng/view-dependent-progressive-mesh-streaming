@@ -19,8 +19,6 @@ public:
         return gfmesh_;
     }
 
-    virtual void disp(void);
-    virtual void reshape(int width, int height);
     virtual void keyboard(unsigned char key, int x, int y);
     virtual void special(int key, int x, int y);
     virtual void mouse(int button, int state, int x, int y);
@@ -55,10 +53,10 @@ private:
     typedef std::list<Action> Record;
 
 private:
+    virtual void draw_surface_with_arrays(void);
+    
     void check_visibility(void);
     void handleSpecial(int key, int, int, int state);
-    void draw_surface_with_arrays(void);
-
 private:
     Gfmesh   *gfmesh_;
     VertexPQ *pq_;
