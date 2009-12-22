@@ -100,7 +100,11 @@ void SimpleRender::draw_surface_with_arrays()
         }
     }
     glEnd();
-    glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+    if (to_output_)
+    {
+        glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+        to_output_ = false;
+    }
     rendered_ = true;
 }
 
@@ -165,6 +169,7 @@ void SimpleRender::do_main()
         std::ofstream ofs(sstr.str().c_str());
         outputImage(ofs);
         ofs.close();
+        to_output_ = true;
         if (count == 0)
         {
             for (int i = 0; i < initial_size_; i++)
@@ -217,9 +222,13 @@ void SimpleRender::do_main()
 
 SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfmesh, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix, int initial_size, int batch_size, int total_count) 
         :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), split_map_(split_map), pq_(pq), prefix_(prefix), initial_size_(initial_size), batch_size_(batch_size), total_count_(total_count), \
-        to_output_(false), to_check_visibility_(false), rendered_(false)
+        to_output_(true), to_check_visibility_(false), rendered_(false)
 {
-    if (pq_ != 0) to_check_visibility_ = true;
+    if (pq_ != 0)
+    {
+        to_check_visibility_ = true;
+    }
+    
     auto_center(gfmesh_->vertex_number(), gfmesh_->vertex_array());
     
     framerate_ = 50;
