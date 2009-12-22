@@ -18,7 +18,7 @@ best_image:best_image.o $(OBJ) simple_render.o baserender.o
 vertex_by_vertex:vertex_by_vertex.o $(OBJ) simple_render.o baserender.o
 	$(CC) $(OPTIONS) $(LIBRARY)  -lglut -o $@ $< $(OBJ) simple_render.o baserender.o
 psnr:psnr.c
-	gcc -Wall -O2 -o $@ $<
+	gcc -Wall -O2 -o $@ $< -lm
 %:%.o $(OBJ)
 	$(CC) $(OPTIONS) $(LIBRARY) -o $@ $< $(OBJ)
 %.o:%.cc 

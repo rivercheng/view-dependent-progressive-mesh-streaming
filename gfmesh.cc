@@ -1,3 +1,8 @@
+// =============================================================================
+// Written by Cheng Wei
+// rivercheng@gmail.com
+// 9 Oct 2009
+// =============================================================================
 #include "gfmesh.hh"
 #include "ppmesh.hh"
 Gfmesh::Gfmesh(std::istream& ifs)
@@ -142,9 +147,9 @@ void Gfmesh::vertex_normal(VertexIndex vertex_index)
     return;
 }
 
-bool Gfmesh::decode(VertexID id, const BitString& data, size_t* p_pos, bool temp)
+bool Gfmesh::decode(VertexID id, const BitString& data, size_t* p_pos)
 {
-    bool result = ppmesh_->decode(id, data, p_pos, temp);
+    bool result = ppmesh_->decode(id, data, p_pos);
     updated_ = updated_ || result;
     return result;
 }

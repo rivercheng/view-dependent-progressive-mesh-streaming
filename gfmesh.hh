@@ -1,3 +1,8 @@
+// =============================================================================
+// Written by Cheng Wei
+// rivercheng@gmail.com
+// 9 Oct 2009
+// =============================================================================
 #ifndef __GFMESH_H__
 #define __GFMESH_H__
 #include "common_def.hh"
@@ -12,12 +17,35 @@ class Gfmesh
 {
 // ================================INTERFACE=============================================
     public:
+        /**
+         * Construct a gfmesh by reading ifs.
+         */
         Gfmesh(std::istream& ifs);
+
+        /**
+         * Copy construction is allowed.
+         * The embedded ppmesh is recreated and everything is really copied.
+         * No sharing data with the old gfmesh.
+         */
         Gfmesh(const Gfmesh&);
+
+        /**
+         * the embedded ppmesh will be deleted.
+         */
         virtual ~Gfmesh(void);
-        bool decode(VertexID id, const BitString& data, size_t* p_pos, bool temp=false);
+
+        /**
+         * decode and apply all vertex splits coded in the data.
+         * NOTICE: before calling update(), only the embedded ppmesh is changed 
+         * and the changes are written to report arrays. The vertex array, face array, 
+         * and normal arrays are all kept untouched. This implementation is for efficiency.
+         * We prefer to update the gfmesh at once when necessary.
+         */
+        bool    decode(VertexID id, const BitString& data, size_t* p_pos);
+        
         /**
          * Update the gfmesh to be consistent with ppmesh.
+         * After updating, the report arrays will be cleared.
          */
         virtual void    update(void);
         
@@ -29,6 +57,7 @@ class Gfmesh
         
         /**
         * Return the address of vertex array.
+        * For render usage.
         */
         const Coordinate* vertex_array   (void) const
         {
@@ -37,6 +66,7 @@ class Gfmesh
     
         /**
         * Return the address of face array.
+        * For render usage.
         */
         const VertexIndex* face_array   (void)   const
         {
@@ -45,6 +75,7 @@ class Gfmesh
         
         /**
         * Return the address of vertex normal array.
+        * For render usage.
         */
         const Normalf*    vertex_normal_array(void) const
         {
@@ -53,6 +84,7 @@ class Gfmesh
 
         /**
         * return the address of face normal array.
+        * Fore render usage.
         */
         const Normalf*    face_normal_array(void)   const
         {
@@ -80,6 +112,8 @@ class Gfmesh
             assert(faceIndex < face_array_.size());
             return face_array_[faceIndex].v1;
         }
+    
+        
         
         VertexIndex vertex2_in_face(FaceIndex faceIndex) const
         {

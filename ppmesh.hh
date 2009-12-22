@@ -22,7 +22,16 @@ class Ppmesh
 {
 // ============================INTERFACE====================================
     public:
+    /**
+     * to create a ppmesh by reading data from ifs.
+     */
     Ppmesh(std::istream& ifs, int quantize_bits = 14);
+
+    /**
+     * This construction function including assigning report arrays.
+     * These reporting arrays will be appended with the newly generated vertices,
+     * faces, affected vertices, and affected faces.
+     */
     Ppmesh(std::istream& ifs, \
            std::vector<Vertex>&               new_vertices_, \
            std::vector<Face>&                 new_faces_, \
@@ -30,24 +39,35 @@ class Ppmesh
            std::map<FaceIndex, Face>&         affected_faces_, \
            int quantize_bits = 14);
 
+    /**
+     * The copy construction function is allowed. 
+     * NOTICE: The reporting arrays of the new ppmesh will be set to 0.
+     * Coping from the old ppmesh does not make sense in many cases.
+     * If they are needed, use set_report_arrays to set.
+     */
     Ppmesh(const Ppmesh&);
+
+    /**
+     * Set the reporting arrays which will be appended with the newly generated vertices,
+     * faces, affected vertices, and affected faces.
+     */
     void set_report_arrays(
            std::vector<Vertex>&               new_vertices_, \
            std::vector<Face>&                 new_faces_, \
            std::set<VertexIndex>&             affected_vertex_indices_, \
            std::map<FaceIndex, Face>&         affected_faces_);
+    
     virtual ~Ppmesh(void);
 
     /**
      * to decode a vertex id from given position of a given bitstring, 
-     * In most cases, please let temp be false.
      * Return ture if this vertex split can be done. return false
      * if this vertex split has to wait for parents. It will be done
      * immediately when the parent vertex split is done.
      * The pos will be updated to next unvisited bit in the data.
      */
     bool decode(VertexID id, const BitString& data, \
-                size_t* p_pos, bool temp = false);
+                size_t* p_pos);
 
     /**
      * output all the vertices connected to a given vertex (one-ring neighbor).
@@ -103,6 +123,8 @@ class Ppmesh
 
 // =======================================PRIVATE PART==================================//
     private:  // private types
+
+    // So the vertices include two extra attributes: id and level.
     struct MyTraits : public OpenMesh::DefaultTraits
     {
         VertexAttributes(OpenMesh::Attributes::Normal | \
@@ -123,11 +145,14 @@ class Ppmesh
     typedef OpenMesh::TriMesh_ArrayKernelT<MyTraits>  MyMesh;
 
     enum Side {LEFT, RIGHT};
+
+    // Exceptions
     class InvalidID {};
     class DecodeError {};
     class NoDecoder {};
     class WrongFileFormat {};
 
+    // To store the vertex splits to be decoded.
     struct splitInfo
     {
         VertexID                   id;
@@ -141,6 +166,7 @@ class Ppmesh
         Coordinate                 z1;
     };
 
+    // To store the vertex splits already applied
     struct VsInfo
     {
         VertexIndex                v;
@@ -203,25 +229,45 @@ class Ppmesh
     std::map<FaceIndex, Face>         *affected_faces_;
     
     private:  // private member functions
+
+    //assignment is not allowed. Please use copy construction function instead.
     Ppmesh& operator=(const Ppmesh&);
     
+    // read base file from ifs
     void         readBase(std::istream& ifs);
-    bool         splitVs(splitInfo split, bool temp=false);
+
+    // to split a vertex split. Return true if it is split.
+    // Return false if it is buffered.
+    bool         splitVs(splitInfo split);
+
+    // return the number of one ring neighbors.
     size_t       one_ring_neighbor(const MyMesh::VertexHandle& v1, \
                                    std::vector<VertexID>& neighbors) const;
+    // decode the correct id number from the code.
     size_t       code2id(const std::vector<VertexID>&id_array, \
                          unsigned int code, \
                          std::vector<VertexID>& result_array, \
                          unsigned int* p_code_remain, \
                          size_t pos=0) const;
+
+    // split the neighbors until the correct V_l or V_r is found.
     VertexID     further_split(std::vector<VertexID>& neighbors, \
                                VertexID id, size_t pos, \
-                               Side side, bool temp = false);
+                               Side side);
+
+    // read base mesh data. Base mesh data is the beginning part of base file.
     void         read_base_mesh(std::istream& ifs);
+
+    // read PM data. PM data is part of base mesh data.
     void         readPM(std::istream& ifs);
+
+    // helper function. Generate a Face data from a face handle.
     Face         fh_2_face(MyMesh::FaceHandle fh);
+
+    // helper function. Copy data from MyMesh object. It is not directly supported by OpenMesh.
     void         copyMesh(MyMesh& dest) const;
 
+    // read huffman coding tree for the base file.
     template <typename T>
     void read_huffman_tree(std::istream& ifs, Huffman::DecodeTree<T>& tree)
     {

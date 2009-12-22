@@ -1,3 +1,8 @@
+// =============================================================================
+// Written by Cheng Wei
+// rivercheng@gmail.com
+// 2 Nov 2009
+// =============================================================================
 #ifndef __VDMESH_H__
 #define __VDMESH_H__
 #include "common_def.hh"
@@ -203,5 +208,3 @@ class Vdmesh : public Gfmesh
         Vdmesh& operator=(const Vdmesh&);
 };
 #endif
-
-

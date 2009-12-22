@@ -207,7 +207,10 @@ void SimpleRender::do_main()
                 VertexID id = buffer_.front();
                 buffer_.pop_front();
                 size_t pos = 0;
-                std::cerr << count << " " << id << std::endl;
+                if (count / 100 * 100 == count)
+                {
+                    std::cerr << count << " " << id << std::endl;
+                }
                 gfmesh_->decode(id, split_map_[id], &pos);
                 count ++;
             }

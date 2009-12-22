@@ -21,7 +21,7 @@ double get_mse(unsigned char* f1, unsigned char* f2, size_t n)
         sum_of_square += (diff*diff);
     }
     //printf("sum: %e\n", sum_of_square);
-    printf("%ld %d ", n, count);
+    printf("%ld %d ", (long)n, count);
     return sum_of_square/n;
 }
 
