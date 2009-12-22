@@ -19,7 +19,7 @@ class Gfmesh
         /**
          * Update the gfmesh to be consistent with ppmesh.
          */
-        void    update(void);
+        virtual void    update(void);
         
         /**
          * Output an OFF file of current mesh.
@@ -116,6 +116,7 @@ class Gfmesh
         unsigned int id2level(VertexID id) const;
         VertexID index2id(VertexIndex index) const;
         VertexIndex id2index(VertexID id) const;
+        VertexID to_be_split(void);
 
 // =====================================PRIVATE================================================================
     private: //variables
@@ -135,6 +136,7 @@ class Gfmesh
 
         //data structure for update(). 
         //Avoid to be local to improve efficiency.
+    protected:
         std::vector<Vertex>  vertices;
         std::vector<Face>    faces;
         std::set<VertexIndex> vertex_index_set;

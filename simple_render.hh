@@ -13,11 +13,10 @@ class BitString;
 class SimpleRender : public BaseRender
 {
 public:
-    SimpleRender(int argc, char *argv[], const char *name, Gfmesh *mesh, Vdmesh *mesh2, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix);
+    SimpleRender(int argc, char *argv[], const char *name, Vdmesh *mesh, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix);
     
 private:
-    Gfmesh   *gfmesh_;
-    Vdmesh   *mesh_begin_;
+    Vdmesh   *gfmesh_;
     unsigned char pixels_[1024 * 768 * 3];
     std::map<VertexID, BitString>& split_map_;
     VertexPQ *pq_;
@@ -40,5 +39,6 @@ private:
     void draw_surface_with_arrays(void);
     void do_main(void);
     void check_visibility(void);
+    VertexID next_to_be_split(void);
 };
 #endif

@@ -2,6 +2,7 @@
 #define __VISIBLE_PQ_H__
 #include <queue>
 #include <GL/glut.h>
+#include <map>
 #include "vdmesh.hh"
 
 
@@ -18,7 +19,7 @@ public:
     /**
      * Constructor from pointers to ppmesh and gfmesh.
      */
-    VertexPQ(Vdmesh *vdmesh, SelectMode mode);
+    VertexPQ(Vdmesh *vdmesh, SelectMode mode, std::map<VertexID, BitString> *split_map = 0);
 
     /**
      * destructor.
@@ -67,7 +68,7 @@ private:
         }
         bool operator()(VertexIndex index1, VertexIndex index2) const
         {
-            return vdmesh_->id2level(vdmesh_->index2id(index1)) < vdmesh_->id2level(vdmesh_->index2id(index2));
+            return vdmesh_->id2level(vdmesh_->index2id(index1)) > vdmesh_->id2level(vdmesh_->index2id(index2));
         }
     private:
         Vdmesh *vdmesh_;
@@ -78,6 +79,7 @@ private:
 private:
     Vdmesh *vdmesh_;
     SelectMode mode_;
+    std::map<VertexID, BitString> *split_map_;
     std::vector<VertexIndex> index_queue_;
 };
 #endif

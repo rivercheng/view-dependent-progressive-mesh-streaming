@@ -96,6 +96,11 @@ class Ppmesh
      */
     VertexIndex id2index(VertexID id) const;
 
+    /**
+     * Return a vertex id that required to be split for splitting pending splits.
+     */
+    VertexID to_be_split(void);
+
 // =======================================PRIVATE PART==================================//
     private:  // private types
     struct MyTraits : public OpenMesh::DefaultTraits

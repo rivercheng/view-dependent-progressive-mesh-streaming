@@ -5,6 +5,7 @@
 *.base
 *.pgm
 *.ppm
+*.eps
 test_ppmesh
 test_gfmesh
 test_ppm
@@ -12,6 +13,8 @@ test_render
 test_history
 test_pq
 best_image
+vertex_by_vertex
+psnr
 output*
 temp
 tmp

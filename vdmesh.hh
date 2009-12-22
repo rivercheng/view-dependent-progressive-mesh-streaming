@@ -14,9 +14,9 @@ class Vdmesh : public Gfmesh
     public:
         Vdmesh(std::istream& ifs) : Gfmesh(ifs)
         {
-            vertex_visibility_array_.resize(vertex_number(), false);
+            vertex_visibility_array_.resize(vertex_number(), true);
             vertex_importance_array_.resize(vertex_number(), 0);
-            face_visibility_array_.resize(face_number(), false);
+            face_visibility_array_.resize(face_number(), true);
             face_importance_array_.resize(face_number(), 0);
         }
         
@@ -34,19 +34,22 @@ class Vdmesh : public Gfmesh
 
         void set_vertex_visibility(VertexIndex index, bool is_visible)
         {
-            if (index >= vertex_visibility_array_.size())
+            /*if (index >= vertex_visibility_array_.size())
             {
                 vertex_visibility_array_.resize(index+1, false);
-            }
+            }*/
+            assert(index < vertex_visibility_array_.size());
             vertex_visibility_array_[index] = is_visible;
         }
 
         void set_face_visibility(FaceIndex index, bool is_visible)
         {
-            if (index >= face_visibility_array_.size())
+            /*if (index >= face_visibility_array_.size())
             {
                 face_visibility_array_.resize(index+1, false);
             }
+            */
+            assert(index < face_visibility_array_.size());
             face_visibility_array_[index] = is_visible;
         }
         
@@ -92,19 +95,23 @@ class Vdmesh : public Gfmesh
 
         void set_vertex_importance(VertexIndex index, int importance)
         {
+            /*
             if (index >= vertex_importance_array_.size())
             {
                 vertex_importance_array_.resize(index+1, 0);
-            }
+            }*/
+            assert(index < vertex_importance_array_.size());
             vertex_importance_array_[index] = importance;
         }
 
         void set_face_importance(FaceIndex index, int importance)
         {
+            /*
             if (index >= face_importance_array_.size())
             {
                 face_importance_array_.resize(index+1, 0);
-            }
+            }*/
+            assert(index < face_importance_array_.size());
             face_importance_array_[index] = importance;
         }
         
@@ -139,6 +146,51 @@ class Vdmesh : public Gfmesh
                 *it = 0;
             }
         }
+
+        virtual void update(void)
+        {
+            std::vector<Vertex>::const_iterator vit = vertices.begin();
+            std::vector<Vertex>::const_iterator vend = vertices.end();
+            for (; vit != vend; ++vit)
+            {
+                vertex_visibility_array_.push_back(true);
+                vertex_importance_array_.push_back(1); //default importance cannot be 0
+            }
+    
+            std::vector<Face>::const_iterator fit = faces.begin();
+            std::vector<Face>::const_iterator fend = faces.end();
+            for (; fit != fend; ++fit)
+            {
+                face_visibility_array_.push_back(true);
+                face_importance_array_.push_back(1);
+            }
+    
+            std::map<FaceIndex, Face>::const_iterator fi_it = face_map.begin();
+            std::map<FaceIndex, Face>::const_iterator fi_end = face_map.end();
+            for (; fi_it != fi_end; ++fi_it)
+            {
+                face_visibility_array_[fi_it->first] = true;
+                face_importance_array_[fi_it->first] += 1; //ensure it is not 0
+            }
+    
+            std::set<VertexIndex>::const_iterator vi_it = vertex_index_set.begin();
+            std::set<VertexIndex>::const_iterator vi_end = vertex_index_set.end();
+            for (; vi_it != vi_end; ++vi_it)
+            {
+                vertex_visibility_array_[*vi_it] = true;
+                vertex_importance_array_[*vi_it] += 1; //ensure it is not 0
+            }
+
+            Gfmesh::update();
+        }
+
+
+                
+
+
+
+
+
 
         
 // =====================================PRIVATE================================================================

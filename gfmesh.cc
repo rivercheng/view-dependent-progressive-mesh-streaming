@@ -208,3 +208,8 @@ VertexIndex Gfmesh::id2index(VertexID id) const
 {
     return ppmesh_->id2index(id);
 }
+
+VertexID Gfmesh::to_be_split()
+{
+    return ppmesh_->to_be_split();
+}

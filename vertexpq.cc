@@ -2,8 +2,8 @@
 #include <algorithm>
 
 
-VertexPQ::VertexPQ(Vdmesh *vdmesh, SelectMode mode)
-        :vdmesh_(vdmesh), mode_(mode)
+VertexPQ::VertexPQ(Vdmesh *vdmesh, SelectMode mode, std::map<VertexID, BitString> *split_map)
+        :vdmesh_(vdmesh), mode_(mode), split_map_(split_map)
 {
 }
 
@@ -54,14 +54,21 @@ void VertexPQ::update(unsigned char* pixels, size_t size)
     stat_screen_area(pixels, size);
     for (size_t i = 0; i <  vdmesh_->vertex_number(); i++)
     {
-        std::cerr<<"vertex "<<i<<" "<<" visible: "<<vdmesh_->vertex_is_visible(i)<<" importance "<<vdmesh_->vertex_importance(i)<<std::endl;
+        //std::cerr<<"vertex "<<i<<" "<<" visible: "<<vdmesh_->vertex_is_visible(i)<<" importance "<<vdmesh_->vertex_importance(i)<<std::endl;
         if (vdmesh_->vertex_is_visible(i))
         {
+            if (split_map_ != 0)
+            {
+                if (split_map_->find(vdmesh_->index2id(i)) == split_map_->end())
+                {
+                    continue;
+                }
+            }
             assert(vdmesh_->vertex_importance(i) > 0);
             index_queue_.push_back(i);
         }
     }
-    std::cerr<<"queue size "<<index_queue_.size()<<std::endl;
+    //std::cerr<<"queue size "<<index_queue_.size()<<std::endl;
     if (mode_ == ScreenArea)
     {
         std::make_heap(index_queue_.begin(), index_queue_.end(), CompareArea(vdmesh_));
@@ -92,7 +99,7 @@ VertexIndex VertexPQ::pop()
         VertexIndex index = index_queue_.back();
         top = vdmesh_->index2id(index);
         index_queue_.pop_back();
-        std::cerr << top << " " << index << " " << vdmesh_->vertex_importance(index) << std::endl;
+        //std::cerr << top << " " << index << " " << vdmesh_->vertex_importance(index) << std::endl;
     }
     return top;
 }

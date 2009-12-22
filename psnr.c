@@ -5,7 +5,7 @@
 #include <limits.h>
 #define MAX_SIZE 1024*968
 
-double get_mse(char* f1, char* f2, size_t n)
+double get_mse(unsigned char* f1, unsigned char* f2, size_t n)
 {
     double sum_of_square = 0;
     size_t i = 0;
@@ -20,8 +20,8 @@ double get_mse(char* f1, char* f2, size_t n)
         }
         sum_of_square += (diff*diff);
     }
-    printf("sum: %e\n", sum_of_square);
-    printf("total %d, different in %d\n", n, count);
+    //printf("sum: %e\n", sum_of_square);
+    printf("%ld %d ", n, count);
     return sum_of_square/n;
 }
 
@@ -90,10 +90,10 @@ unsigned int pm_getuint(FILE* fpgm)
 
 
 
-void read_pgm(FILE* fpgm, char* f, size_t* p_len, unsigned int* p_max_val)
+void read_pgm(FILE* fpgm, unsigned char* f, size_t* p_len, unsigned int* p_max_val)
 {
 
-    char ch;
+    unsigned char ch;
     unsigned int cols;
     unsigned int rows;
     unsigned int maxval;
@@ -147,8 +147,8 @@ int main(int argc, char** argv)
 {
     FILE* fpgm1 = NULL;
     FILE* fpgm2 = NULL;
-    char f1[MAX_SIZE];
-    char f2[MAX_SIZE];
+    unsigned char f1[MAX_SIZE];
+    unsigned char f2[MAX_SIZE];
     size_t len1 = MAX_SIZE;
     size_t len2 = MAX_SIZE;
     double mse;
@@ -176,7 +176,8 @@ int main(int argc, char** argv)
 
     mse = get_mse(f1, f2, len1);
     psnr = get_psnr(mse, (double)max_val);
-    printf("mse: %e, rmse: %e, psnr: %e\n", mse, sqrt(mse), psnr);
+    printf("%e %e %f\n", mse, sqrt(mse), psnr);
+    return 0;
 }
 
 

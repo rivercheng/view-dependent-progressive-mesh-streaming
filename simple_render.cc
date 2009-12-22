@@ -71,6 +71,7 @@ void SimpleRender::check_visibility()
     glEnable(GL_LIGHTING);
     glEnable(GL_DITHER);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    to_check_visibility_ = false;
 }
 
 void SimpleRender::draw_surface_with_arrays()
@@ -83,19 +84,22 @@ void SimpleRender::draw_surface_with_arrays()
         check_visibility();
     }
     
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glBegin(GL_TRIANGLES);
-        for (size_t i=0; i< gfmesh_->face_number(); i++)
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glBegin(GL_TRIANGLES);
+    for (size_t i=0; i< gfmesh_->face_number(); i++)
+    {
+        if (gfmesh_->face_is_visible(i))
         {
-                glNormal3d(gfmesh_->face_normal_array()[3*i], gfmesh_->face_normal_array()[3*i+1], gfmesh_->face_normal_array()[3*i+2]);
-                VertexIndex v1 = gfmesh_->vertex1_in_face(i);
-                VertexIndex v2 = gfmesh_->vertex2_in_face(i);
-                VertexIndex v3 = gfmesh_->vertex3_in_face(i);
-                glArrayElement(v1);
-                glArrayElement(v2);
-                glArrayElement(v3);
+            glNormal3d(gfmesh_->face_normal_array()[3*i], gfmesh_->face_normal_array()[3*i+1], gfmesh_->face_normal_array()[3*i+2]);
+            VertexIndex v1 = gfmesh_->vertex1_in_face(i);
+            VertexIndex v2 = gfmesh_->vertex2_in_face(i);
+            VertexIndex v3 = gfmesh_->vertex3_in_face(i);
+            glArrayElement(v1);
+            glArrayElement(v2);
+            glArrayElement(v3);
         }
-        glEnd();
+    }
+    glEnd();
     glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
     rendered_ = true;
 }
@@ -176,81 +180,61 @@ void SimpleRender::output_best_image(void)
     }
 }
 
+VertexID SimpleRender::next_to_be_split()
+{
+    VertexID id = gfmesh_->to_be_split();
+    if (id == 0) // No pending splits
+    {
+        /*while(true)
+        {
+            id = pq_->pop();
+            //std::cerr << "ID " << id << std::endl;
+            if (id == 0) break;
+            if (split_map_.find(id) != split_map_.end())
+            {
+                break;
+            }
+        }
+        */
+        id = pq_->pop();
+    }
+    return id;
+}
 
 void SimpleRender::do_main()
 {
-    static int counter = 0;
-    static std::deque<VertexID> vertices_to_split;
-    if (counter == 0)
+    static int count = 0;
+    if (rendered_)
     {
-        std::string output_name = prefix_ + "final_image.pgm";
-        std::ofstream ofs(output_name.c_str());
+        std::string output_name;
+        std::stringstream sstr(output_name);
+        sstr << prefix_ << count << ".pgm";
+        std::ofstream ofs(sstr.str().c_str());
         outputImage(ofs);
         ofs.close();
-        gfmesh_ = mesh_begin_;
-        to_check_visibility_ = true;
-        glutPostRedisplay();
-    }
-    else if (!rendered_)
-    {
-        return;
-    }
-    else 
-    {
-        if (counter == 1)
-        {
-            VertexID id = 0;
-            int count = 0; 
-            while((id = pq_->pop()) != 0 && count < 15000)
-            {
-                if (split_map_.find(id) != split_map_.end())
-                {
-                    vertices_to_split.push_back(id);
-                    count ++;
-                }
-            }
-            to_check_visibility_ = false;
-        }
-        else if (!vertices_to_split.empty())
-        {
-            VertexID id = vertices_to_split.front();
-            vertices_to_split.pop_front();
-            size_t pos = 0;
-            //std::cerr << "id " << id;
-            std::map<VertexID, BitString>::const_iterator it = split_map_.find(id);
-            if (it != split_map_.end())
-            {
-                //std::cerr << it->second;
-                gfmesh_->decode(id, it->second, &pos);
-                gfmesh_->update();
-                glutPostRedisplay();
-            }
-            //std::cerr << std::endl;
-        }
-        else if (counter > 1)
+        
+        VertexID id = next_to_be_split();
+        if (id == 0 ||count == 20000) 
         {
             exit(0);
         }
-
-        if (counter == counter / 300 * 300)
-        {
-            std::string str;
-            std::stringstream sstr(str);
-            sstr << prefix_ << "_output_image_" << counter / 300 <<".pgm";
-            std::cerr << sstr.str().c_str() << std::endl;
-            std::ofstream ofs(sstr.str().c_str());
-            outputImage(ofs);
-            ofs.close();
-        }
+        size_t pos = 0;
+        std::cerr << count << " " << id << std::endl;
+        gfmesh_->decode(id, split_map_[id], &pos);
+        gfmesh_->update();
+        
+        rendered_ = false;
+        to_check_visibility_ = true;
+        count ++;
+        glutPostRedisplay();
     }
-    counter ++;
-    rendered_ = false;
 }
 
-SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Gfmesh *gfmesh_final, Vdmesh *gfmesh_begin, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix) 
-        :BaseRender(argc, argv, name, false), gfmesh_(gfmesh_final), mesh_begin_(gfmesh_begin), split_map_(split_map), pq_(pq), prefix_(prefix), \
+SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfmesh, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix) 
+        :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), split_map_(split_map), pq_(pq), prefix_(prefix), \
         to_output_(false), to_check_visibility_(false), rendered_(false)
 {
+    if (pq_ != 0) to_check_visibility_ = true;
     auto_center(gfmesh_->vertex_number(), gfmesh_->vertex_array());
     
     framerate_ = 50;
