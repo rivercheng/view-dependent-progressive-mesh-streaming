@@ -5,29 +5,46 @@
 #include <cstdlib>
 int main(int argc, char** argv)
 {
+    SelectMode mode = ScreenArea;
     int total_count = 20000;
     int initial_size = 1;
     int batch_size  = 1;
     
     if (argc < 3)
     {
-        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [total_count=20000] [initial_size=1] [batch_size=1]"<<std::endl;
+        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [mode = 's':Screen Area | 'l': level | 'r': Random] [total_count=20000] [initial_size=1] [batch_size=1]"<<std::endl;
         exit(1);
     }
 
     if (argc > 3)
     {
-        total_count = atoi(argv[3]);
+        if (argv[3][0] == 's')
+        {
+            mode = ScreenArea;
+        }
+        else if (argv[3][0] == 'l')
+        {
+            mode = Level;
+        }
+        else if (argv[3][0] == 'r')
+        {
+            mode = Random;
+        }
     }
 
     if (argc > 4)
     {
-        initial_size = atoi(argv[4]);
+        total_count = atoi(argv[4]);
     }
 
     if (argc > 5)
     {
-        batch_size = atoi(argv[5]);
+        initial_size = atoi(argv[5]);
+    }
+
+    if (argc > 6)
+    {
+        batch_size = atoi(argv[6]);
     }
 
     std::ifstream ifs(argv[1]);
@@ -114,7 +131,7 @@ int main(int argc, char** argv)
     mesh.update();
     std::cerr << "force split" << std::endl;
     
-    VertexPQ pq(&mesh, ScreenArea, &vertex_splits);
+    VertexPQ pq(&mesh, mode, &vertex_splits);
     SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, &pq, argv[2], initial_size, batch_size, total_count);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();
