@@ -137,7 +137,7 @@ void SimpleRender::idle()
 
 void SimpleRender::output_best_image(void)
 {
-    std::cerr << "in output" << std::endl;
+    //std::cerr << "in output" << std::endl;
     if (rendered_)
     {
         std::string output_name = prefix_ + "_final_image.pgm";

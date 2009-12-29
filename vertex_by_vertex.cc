@@ -6,13 +6,14 @@
 int main(int argc, char** argv)
 {
     SelectMode mode = ScreenArea;
-    int total_count = 20000;
+    int total_count = 0;
     int initial_size = 1;
     int batch_size  = 1;
     
     if (argc < 3)
     {
-        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [mode = 's':Screen Area | 'l': level | 'r': Random] [total_count=20000] [initial_size=1] [batch_size=1]"<<std::endl;
+        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [mode = 's':Screen Area | 'l': level | 'r': Random] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
+        std::cerr << "       total_count = 0 means split all vertex splits."<<std::endl;
         exit(1);
     }
 
@@ -52,6 +53,7 @@ int main(int argc, char** argv)
 
     Vdmesh mesh(ifs);
     size_t count = mesh.n_detail_vertices();
+    if (total_count == 0) total_count = count;
     
     double dx = 0;
     double dy = 0;

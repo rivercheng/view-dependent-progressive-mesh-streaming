@@ -198,7 +198,7 @@ void Render::keyboard(unsigned char key, int, int)
     case 'V':
     case 'v':
         ofs.open("view_points", std::ios::app);
-        ofs<<dx_<<" "<<dy_<<" "<<dz_<<" " \
+        ofs<<dx_*step_x_<<" "<<dy_*step_y_<<" "<<dz_*step_z_<<" " \
         <<angle_x_<<" "<<angle_y_<<" "<< \
         angle_z_<<" "<<scale_<<std::endl;
         ofs.close();
@@ -223,10 +223,12 @@ void Render::handleSpecial(int key, int, int, int state)
             angle_y_ += 10;
             break;
         case GLUT_KEY_UP:
-            dz_ += 0.1 * bounding_length_;
+            //dz_ += 0.1 * bounding_length_;
+            dz_ ++;
             break;
         case GLUT_KEY_DOWN:
-            dz_ -= 0.1 * bounding_length_;
+            //dz_ -= 0.1 * bounding_length_;
+            dz_ --;
             break;
         default:
             break;
@@ -237,16 +239,20 @@ void Render::handleSpecial(int key, int, int, int state)
         switch (key)
         {
         case GLUT_KEY_LEFT:
-            dx_ -= 0.1*bounding_length_;
+            //dx_ -= 0.1*bounding_length_;
+            dx_ --;
             break;
         case GLUT_KEY_RIGHT:
-            dx_ += 0.1*bounding_length_;
+            //dx_ += 0.1*bounding_length_;
+            dx_ ++;
             break;
         case GLUT_KEY_UP:
-            dy_ += 0.1*bounding_length_;
+            //dy_ += 0.1*bounding_length_;
+            dy_ ++;
             break;
         case GLUT_KEY_DOWN:
-            dy_ -= 0.1*bounding_length_;
+            //dy_ -= 0.1*bounding_length_;
+            dy_ --;
             break;
         default:
             break;

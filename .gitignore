@@ -15,6 +15,7 @@ test_pq
 best_image
 vertex_by_vertex
 psnr
+results/
 output*
 temp
 tmp

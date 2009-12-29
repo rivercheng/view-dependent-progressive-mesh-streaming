@@ -30,9 +30,9 @@ public:
     void setView(double dx, double dy, double dz, double angle_x,\
                  double angle_y, double angle_z, double scale)
     {
-        dx_ = dx;
-        dy_ = dy;
-        dz_ = dz;
+        dx_ = dx / step_x_;
+        dy_ = dy / step_y_;
+        dz_ = dz / step_z_;
         angle_x_ = angle_x;
         angle_z_ = angle_z;
         angle_y_ = angle_y;
@@ -125,9 +125,15 @@ protected:
     double view_x_;
     double view_y_;
     double view_z_;
-    double dx_;
-    double dy_;
-    double dz_;
+    //double dx_;
+    //double dy_;
+    //double dz_;
+    int    dx_;
+    int    dy_;
+    int    dz_;
+    double step_x_;
+    double step_y_;
+    double step_z_;
     double angle_x_;
     double angle_y_;
     double angle_z_;

@@ -14,7 +14,7 @@ BaseRender::BaseRender(int argc, char *argv[], const char *name, bool auto_init)
      framerate_(60), \
         view_angle_(45), \
         min_distance_(0.01), max_distance_(5000),\
-        view_x_(0), view_y_(0), view_z_(0), dx_(0), dy_(0), dz_(0), angle_x_(0), \
+        view_x_(0), view_y_(0), view_z_(0), dx_(0), dy_(0), dz_(0), step_x_(0), step_y_(0), step_z_(0), angle_x_(0), \
         angle_y_(0), angle_z_(0), scale_(1), bounding_length_(1), mouse_button_(0), \
         mouse_previous_x_(0), mouse_previous_y_(0),mouse_last_x_(0),mouse_last_y_(0), \
         smooth_(false), interpolated_(false), perspective_(true), \
@@ -131,6 +131,7 @@ void BaseRender::auto_center(size_t count, const Coordinate *vertex_array)
         max_length = max_z - min_z;
     }
     bounding_length_ = max_length;
+    step_x_ = step_y_ = step_z_ = 0.1 * bounding_length_;
 
     double factor = 2;
     left_distance_ = right_distance_ = top_distance_ = bottom_distance_ = factor*max_length*0.5;
@@ -154,7 +155,7 @@ void BaseRender::disp()
     }
 
     glPushMatrix();
-    glTranslated(dx_, dy_, dz_);
+    glTranslated(dx_*step_x_, dy_*step_y_, dz_*step_z_);
     glRotated(angle_x_, 1.0, 0.0, 0.0);
     glRotated(angle_y_, 0.0, 1.0, 0.0);
     glRotated(angle_z_, 0.0, 0.0, 1.0);
