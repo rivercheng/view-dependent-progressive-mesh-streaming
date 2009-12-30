@@ -166,11 +166,13 @@ VertexID SimpleRender::next_to_be_split()
 void SimpleRender::do_main()
 {
     int image_step  = 100;
+    static int last_image = 0;
     if (rendered_)
     {
         //std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
         //std::cout << total_bs_size_ << " " << psnr_ << " " << error_count_ << "\n";
-        if (count_ / image_step * image_step == 0)
+        std::cerr << count_ << " " << last_image << std::endl;
+        if (count_ / image_step >= last_image)
         {
             std::string output_name;
             std::stringstream sstr(output_name);
@@ -178,6 +180,7 @@ void SimpleRender::do_main()
             std::ofstream ofs(sstr.str().c_str());
             outputImage(ofs);
             ofs.close();
+            last_image ++;
         }
         to_output_ = true;
 
