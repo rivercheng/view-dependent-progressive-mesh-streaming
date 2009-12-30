@@ -171,7 +171,6 @@ void SimpleRender::do_main()
     {
         //std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
         //std::cout << total_bs_size_ << " " << psnr_ << " " << error_count_ << "\n";
-        std::cerr << count_ << " " << last_image << std::endl;
         if (count_ / image_step >= last_image)
         {
             std::string output_name;
@@ -195,7 +194,13 @@ void SimpleRender::do_main()
             }
             for (int i = 0; i < batch_size_; i++)
             {
-                if (buffer_.empty()) break;
+                if (buffer_.empty())
+                {
+                    if (i == 0)
+                        exit(0);
+                    else
+                        break;
+                }
                 VertexID id = buffer_.front();
                 buffer_.pop_front();
                 size_t pos = 0;
@@ -224,7 +229,13 @@ void SimpleRender::do_main()
                 {
                     exit(0);
                 }
-                if (buffer_.empty()) break;
+                if (buffer_.empty()) 
+                {
+                    if (i == 0)
+                        exit(0);
+                    else
+                        break;
+                }
                 VertexID id = buffer_.front();
                 buffer_.pop_front();
                 size_t pos = 0;
