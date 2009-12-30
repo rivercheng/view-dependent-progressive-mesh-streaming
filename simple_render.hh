@@ -4,8 +4,11 @@
 #include <list>
 #include <map>
 #include <deque>
+#include <string>
 #include "vertexid.hh"
 #include "baserender.hh"
+#include "psnr_mse.hh"
+
 class Gfmesh;
 class Vdmesh;
 class VertexPQ;
@@ -15,6 +18,7 @@ class SimpleRender : public BaseRender
 {
 public:
     SimpleRender(int argc, char *argv[], const char *name, Vdmesh *mesh, std::map<VertexID, BitString>& split_map, const Center& center, VertexPQ *pq, std::string prefix, int initial_size, int batch_size_, int total_count);
+    void set_original_image(const std::string& pgm_file);
     
 private:
     Vdmesh   *gfmesh_;
@@ -26,6 +30,15 @@ private:
     int initial_size_;
     int batch_size_;
     int total_count_;
+
+    int    count_;
+    VertexID id_;
+    long   bs_size_;
+    long   total_bs_size_;
+    double psnr_;
+    long   error_count_;
+    unsigned char * original_pixels_;
+    unsigned int  max_value_;
 
     bool to_output_;
     bool to_check_visibility_;

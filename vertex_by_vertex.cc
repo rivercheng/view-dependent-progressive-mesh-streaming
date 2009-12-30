@@ -133,9 +133,16 @@ int main(int argc, char** argv)
     }
     mesh.update();
     std::cerr << "force split" << std::endl;
+
     
     VertexPQ pq(&mesh, mode, &vertex_splits);
     SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, center, &pq, argv[2], initial_size, batch_size, total_count);
+    
+    //set final image
+    std::string prefix = std::string(argv[2]);
+    std::string image_name =  prefix + "_final_image.pgm";
+    render.set_original_image(image_name);
+    
     render.setView(dx, dy, dz, ax, ay, az, scale);
     std::cerr << dx << " " << dy << " " << dz << std::endl;
     render.enterMainLoop();

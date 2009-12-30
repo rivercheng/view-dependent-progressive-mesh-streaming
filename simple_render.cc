@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sys/time.h>
 #include <cstdlib>
+#include <cstdio>
 #include <sstream>
 #include <deque>
 #include "simple_render.hh"
@@ -103,6 +104,10 @@ void SimpleRender::draw_surface_with_arrays()
     if (to_output_)
     {
         glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
+        if (original_pixels_)
+        {
+            check_psnr(width_*height_, max_value_, original_pixels_, pixels_, &psnr_, &error_count_);
+        }
         to_output_ = false;
     }
     rendered_ = true;
@@ -160,18 +165,25 @@ VertexID SimpleRender::next_to_be_split()
 
 void SimpleRender::do_main()
 {
-    static int count = 0;
+    int image_step  = 100;
     if (rendered_)
     {
-        std::string output_name;
-        std::stringstream sstr(output_name);
-        sstr << prefix_ << count << ".pgm";
-        std::ofstream ofs(sstr.str().c_str());
-        outputImage(ofs);
-        ofs.close();
-        to_output_ = true;
-        if (count == 0)
+        //std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
+        //std::cout << total_bs_size_ << " " << psnr_ << " " << error_count_ << "\n";
+        if (count_ / image_step * image_step == 0)
         {
+            std::string output_name;
+            std::stringstream sstr(output_name);
+            sstr << prefix_ << count_ << ".pgm";
+            std::ofstream ofs(sstr.str().c_str());
+            outputImage(ofs);
+            ofs.close();
+        }
+        to_output_ = true;
+
+        if (count_ == 0)
+        {
+            //initial step
             for (int i = 0; i < initial_size_; i++)
             {
                 VertexID id = next_to_be_split();
@@ -184,8 +196,14 @@ void SimpleRender::do_main()
                 VertexID id = buffer_.front();
                 buffer_.pop_front();
                 size_t pos = 0;
-                gfmesh_->decode(id, split_map_[id], &pos);
-                count ++;
+                BitString bs = split_map_[id];
+                gfmesh_->decode(id, bs, &pos);
+                count_ ++;
+                id_ = id;
+                bs_size_ = bs.size();
+                total_bs_size_ += bs_size_;
+                std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
+                std::cout << total_bs_size_ << " " << psnr_ << " " << error_count_ << "\n";
             }
         }
         else
@@ -199,7 +217,7 @@ void SimpleRender::do_main()
 
             for (int i = 0; i < batch_size_; i++)
             {
-                if (count > total_count_) 
+                if (count_ > total_count_) 
                 {
                     exit(0);
                 }
@@ -207,12 +225,14 @@ void SimpleRender::do_main()
                 VertexID id = buffer_.front();
                 buffer_.pop_front();
                 size_t pos = 0;
-                if (count / 100 * 100 == count)
-                {
-                    std::cerr << count << " " << id << std::endl;
-                }
-                gfmesh_->decode(id, split_map_[id], &pos);
-                count ++;
+                BitString bs = split_map_[id];
+                gfmesh_->decode(id, bs, &pos);
+                count_ ++;
+                id_ = id;
+                bs_size_ = bs.size();
+                total_bs_size_ += bs_size_;
+                std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
+                std::cout << total_bs_size_ / 8 << " " << psnr_ << " " << error_count_ << "\n";
             }
         }
         gfmesh_->update();
@@ -225,6 +245,8 @@ void SimpleRender::do_main()
 
 SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfmesh, std::map<VertexID, BitString>& split_map, const Center& center, VertexPQ *pq, std::string prefix, int initial_size, int batch_size, int total_count) 
         :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), split_map_(split_map), pq_(pq), prefix_(prefix), initial_size_(initial_size), batch_size_(batch_size), total_count_(total_count), \
+         count_(0), id_(0), bs_size_(0), total_bs_size_(0), psnr_(0), error_count_(0), \
+         original_pixels_(0), max_value_(255), \
         to_output_(true), to_check_visibility_(false), rendered_(false)
 {
     if (pq_ != 0)
@@ -239,4 +261,14 @@ SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfm
     
     std::cerr<<view_x_<<" "<<view_y_<<" "<<view_z_<<" "<<std::endl;
     std::cerr<<bounding_length_<<std::endl;
+}
+
+void SimpleRender::set_original_image(const std::string& pgm_file)
+{
+    FILE* fpgm = fopen(pgm_file.c_str(), "rb");
+    assert(fpgm);
+    size_t len = 1024 * 768;
+    original_pixels_ = new unsigned char[1024 * 768];
+    read_pgm(fpgm, original_pixels_, &len, &max_value_);
+    //std::cout << "max" << max_value_ << std::endl;
 }
