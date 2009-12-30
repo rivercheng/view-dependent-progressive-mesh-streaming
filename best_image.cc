@@ -12,9 +12,9 @@ int main(int argc, char** argv)
     }
     std::ifstream ifs(argv[1]);
 
-    //Generate two identical vdmeshes.
     Vdmesh mesh(ifs);
-
+    Center center = auto_center(mesh.vertex_number(), mesh.vertex_array());
+    
     size_t count = mesh.n_detail_vertices();
     
     double dx = 0;
@@ -45,8 +45,9 @@ int main(int argc, char** argv)
     mesh.update();
     
     std::map<VertexID, BitString> vertex_splits;
-    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, 0, argv[2], 1, 1, 1);
+    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, center, 0, argv[2], 1, 1, 1);
     render.setView(dx, dy, dz, ax, ay, az, scale);
+    std::cerr << dx << " " << dy << " " << dz << std::endl;
     render.enterMainLoop();
 }
 

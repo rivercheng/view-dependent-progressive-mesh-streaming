@@ -16,6 +16,7 @@ best_image
 vertex_by_vertex
 psnr
 results/
+results2/
 output*
 temp
 tmp

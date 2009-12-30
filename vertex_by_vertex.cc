@@ -52,6 +52,7 @@ int main(int argc, char** argv)
 
 
     Vdmesh mesh(ifs);
+    Center center = auto_center(mesh.vertex_number(), mesh.vertex_array());
     size_t count = mesh.n_detail_vertices();
     if (total_count == 0) total_count = count;
     
@@ -134,8 +135,9 @@ int main(int argc, char** argv)
     std::cerr << "force split" << std::endl;
     
     VertexPQ pq(&mesh, mode, &vertex_splits);
-    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, &pq, argv[2], initial_size, batch_size, total_count);
+    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, center, &pq, argv[2], initial_size, batch_size, total_count);
     render.setView(dx, dy, dz, ax, ay, az, scale);
+    std::cerr << dx << " " << dy << " " << dz << std::endl;
     render.enterMainLoop();
 }
 

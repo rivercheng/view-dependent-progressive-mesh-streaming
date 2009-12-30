@@ -86,58 +86,16 @@ void BaseRender::enterMainLoop()
     glutMainLoop();
 }
 
-void BaseRender::auto_center(size_t count, const Coordinate *vertex_array)
+void BaseRender::set_center(const Center& center)
 {
-    Coordinate center_x = 0;
-    Coordinate center_y = 0;
-    Coordinate center_z = 0;
-    Coordinate min_x = 0;
-    Coordinate max_x = 0;
-    Coordinate min_y = 0;
-    Coordinate max_y = 0;
-    Coordinate min_z = 0;
-    Coordinate max_z = 0;
-    Coordinate max_length = 0;
-
-    center_x = min_x = max_x = vertex_array[0];
-    center_y = min_y = max_y = vertex_array[1];
-    center_z = min_z = max_z = vertex_array[2];
-    for (size_t i=1; i < count; i++)
-    {
-        Coordinate x = vertex_array[3*i];
-        Coordinate y = vertex_array[3*i+1];
-        Coordinate z = vertex_array[3*i+2];
-
-        min_x = min_x > x ? x : min_x;
-        max_x = max_x < x ? x : max_x;
-
-        min_y = min_y > y ? y : min_y;
-        max_y = max_y < y ? y : max_y;
-
-        min_z = min_z > z ? z : min_z;
-        max_z = max_z < z ? z : max_z;
-    }
-    center_x = (max_x + min_x)/2;
-    center_y = (max_y + min_y)/2;
-    center_z = (max_z + min_z)/2;
-
-    max_length = max_x - min_x;
-    if (max_y - min_y > max_length)
-    {
-        max_length = max_y - min_y;
-    }
-    if (max_z - min_z > max_length)
-    {
-        max_length = max_z - min_z;
-    }
-    bounding_length_ = max_length;
+    bounding_length_ = center.bounding_length;
     step_x_ = step_y_ = step_z_ = 0.1 * bounding_length_;
 
     double factor = 2;
-    left_distance_ = right_distance_ = top_distance_ = bottom_distance_ = factor*max_length*0.5;
-    view_x_ = center_x;
-    view_y_ = center_y;
-    view_z_ = center_z + 1.5*max_length;
+    left_distance_ = right_distance_ = top_distance_ = bottom_distance_ = factor*bounding_length_*0.5;
+    view_x_ = center.cx;
+    view_y_ = center.cy;
+    view_z_ = center.cz + 1.5*bounding_length_;
     min_distance_ = 0.01 * view_z_;
     max_distance_ = 100 * view_z_;
 }

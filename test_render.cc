@@ -42,7 +42,8 @@ int main(int argc, char** argv)
     }
     gfmesh.update();
 
-    Render render(argc, argv, argv[1], &gfmesh, 60);
+    Center center = auto_center(gfmesh.vertex_number(), gfmesh.vertex_array());
+    Render render(argc, argv, argv[1], &gfmesh, 60, center);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();
 }

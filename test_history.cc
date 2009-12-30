@@ -56,7 +56,8 @@ int main(int argc, char** argv)
 
     mesh.update();
 
-    Render render(argc, argv, argv[1], &mesh, 60);
+    Center center = auto_center(mesh.vertex_number(), mesh.vertex_array());
+    Render render(argc, argv, argv[1], &mesh, 60, center);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();
 }

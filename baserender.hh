@@ -5,6 +5,7 @@
 #include <map>
 #include "vertexid.hh"
 #include "common_def.hh"
+#include "measure.hh"
 
 class Gfmesh;
 class BaseRender
@@ -18,7 +19,7 @@ public:
 
     virtual void initGlut(int argc, char** argv);
 
-    void auto_center(size_t count, const Coordinate *vertex_array);
+    void set_center(const Center& center);
     
     void set_center(double center_x, double center_y, double center_z, double distance)
     {

@@ -332,11 +332,11 @@ void Render::timer(int value)
     glutTimerFunc(1000/value, timerWrapper, value);
 }
 
-Render::Render(int argc, char *argv[], const char *name, Gfmesh *gfmesh, int framerate, VertexPQ *pq) 
+Render::Render(int argc, char *argv[], const char *name, Gfmesh *gfmesh, int framerate, const Center& center, VertexPQ *pq) 
         :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), pq_(pq), \
         to_output_(false), to_check_visibility_(true)
 {
-    auto_center(gfmesh_->vertex_number(), gfmesh_->vertex_array());
+    set_center(center);
     framerate_ = framerate;
     initGlut(argc, argv);
 

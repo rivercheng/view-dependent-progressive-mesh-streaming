@@ -2,7 +2,7 @@ LIBRARY = -lOpenMesh_Core #-lprofiler#-lOpenMesh_Tools -lPocoFoundation -lPocoNe
 OPTIONS =  -Wall -W -Wextra -g -O2 
 CC = g++
 ALL = test_ppmesh test_gfmesh test_ppm test_render test_history test_pq best_image vertex_by_vertex psnr
-OBJ = ppmesh.o bitstring.o vertexid.o common_def.o gfmesh.o vertexpq.o
+OBJ = ppmesh.o bitstring.o vertexid.o common_def.o gfmesh.o vertexpq.o measure.o
 
 all: $(ALL)
 tags: *.cc *.hh
@@ -30,29 +30,30 @@ depend:
 	makedepend -Y *.cc
 # DO NOT DELETE
 
-baserender.o: baserender.hh vertexid.hh bitstring.hh common_def.hh
+baserender.o: baserender.hh vertexid.hh bitstring.hh common_def.hh measure.hh
 best_image.o: simple_render.hh vertexid.hh bitstring.hh baserender.hh
-best_image.o: common_def.hh gfmesh.hh vertexpq.hh vdmesh.hh
+best_image.o: common_def.hh measure.hh gfmesh.hh vertexpq.hh vdmesh.hh
 bitstring.o: bitstring.hh
 common_def.o: common_def.hh
 gfmesh.o: gfmesh.hh common_def.hh vertexid.hh bitstring.hh ppmesh.hh
 gfmesh.o: huffman.hh
+measure.o: measure.hh common_def.hh
 ppmesh.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
 render.o: render.hh baserender.hh vertexid.hh bitstring.hh common_def.hh
-render.o: gfmesh.hh vertexpq.hh vdmesh.hh
+render.o: measure.hh gfmesh.hh vertexpq.hh vdmesh.hh
 simple_render.o: simple_render.hh vertexid.hh bitstring.hh baserender.hh
-simple_render.o: common_def.hh gfmesh.hh vertexpq.hh vdmesh.hh
+simple_render.o: common_def.hh measure.hh gfmesh.hh vertexpq.hh vdmesh.hh
 test_gfmesh.o: gfmesh.hh common_def.hh vertexid.hh bitstring.hh
 test_history.o: render.hh baserender.hh vertexid.hh bitstring.hh
-test_history.o: common_def.hh vdmesh.hh gfmesh.hh
+test_history.o: common_def.hh measure.hh vdmesh.hh gfmesh.hh
 test_ppm.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
 test_ppmesh.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
 test_pq.o: render.hh baserender.hh vertexid.hh bitstring.hh common_def.hh
-test_pq.o: vdmesh.hh gfmesh.hh vertexpq.hh
+test_pq.o: measure.hh vdmesh.hh gfmesh.hh vertexpq.hh
 test_render.o: render.hh baserender.hh vertexid.hh bitstring.hh common_def.hh
-test_render.o: gfmesh.hh
+test_render.o: measure.hh gfmesh.hh
 vertex_by_vertex.o: simple_render.hh vertexid.hh bitstring.hh baserender.hh
-vertex_by_vertex.o: common_def.hh gfmesh.hh vertexpq.hh vdmesh.hh
+vertex_by_vertex.o: common_def.hh measure.hh gfmesh.hh vertexpq.hh vdmesh.hh
 vertexid.o: vertexid.hh bitstring.hh
 vertexpq.o: vertexpq.hh vdmesh.hh common_def.hh vertexid.hh bitstring.hh
 vertexpq.o: gfmesh.hh

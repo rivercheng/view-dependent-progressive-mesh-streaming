@@ -223,7 +223,7 @@ void SimpleRender::do_main()
     }
 }
 
-SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfmesh, std::map<VertexID, BitString>& split_map, VertexPQ *pq, std::string prefix, int initial_size, int batch_size, int total_count) 
+SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfmesh, std::map<VertexID, BitString>& split_map, const Center& center, VertexPQ *pq, std::string prefix, int initial_size, int batch_size, int total_count) 
         :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), split_map_(split_map), pq_(pq), prefix_(prefix), initial_size_(initial_size), batch_size_(batch_size), total_count_(total_count), \
         to_output_(true), to_check_visibility_(false), rendered_(false)
 {
@@ -232,7 +232,7 @@ SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfm
         to_check_visibility_ = true;
     }
     
-    auto_center(gfmesh_->vertex_number(), gfmesh_->vertex_array());
+    set_center(center);
     
     framerate_ = 50;
     initGlut(argc, argv);
