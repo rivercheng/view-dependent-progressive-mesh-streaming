@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     gfmesh.update();
 
     Center center = auto_center(gfmesh.vertex_number(), gfmesh.vertex_array());
-    VertexPQ pq(&gfmesh, ScreenArea);
+    VertexPQ pq(&gfmesh, SilhouetteScreen);
     SilhouetteRender render(argc, argv, argv[1], &gfmesh, center, &pq);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();

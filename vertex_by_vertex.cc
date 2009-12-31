@@ -12,7 +12,7 @@ int main(int argc, char** argv)
     
     if (argc < 3)
     {
-        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [mode = 's':Screen Area | 'l': level | 'r': Random] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
+        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [mode = 'c': Silhouette + Screen Area | 's':Screen Area | 'l': level | 'r': Random] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
         std::cerr << "       total_count = 0 means split all vertex splits."<<std::endl;
         exit(1);
     }
@@ -22,6 +22,10 @@ int main(int argc, char** argv)
         if (argv[3][0] == 's')
         {
             mode = ScreenArea;
+        }
+        else if (argv[3][0] == 'c')
+        {
+            mode = SilhouetteScreen;
         }
         else if (argv[3][0] == 'l')
         {

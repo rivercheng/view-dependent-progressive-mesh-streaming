@@ -6,7 +6,7 @@
 #include "vdmesh.hh"
 
 
-enum SelectMode {Level, ScreenArea, Random};
+enum SelectMode {Level, ScreenArea, Random, SilhouetteScreen};
 
 //typedef std::priority_queue<VertexID, std::vector<VertexID>, CompareArea>   PQ;
 
@@ -49,9 +49,9 @@ public:
     /**
      * To check whether a vertex is in the silhouette
      */
-    bool in_silhouette(VertexID id)
+    bool in_silhouette(VertexIndex i)
     {
-        if (silhouette_.find(id) != silhouette_.end())
+        if (silhouette_.find(i) != silhouette_.end())
             return true;
         else
             return false;
@@ -95,13 +95,12 @@ private:
         Vdmesh *vdmesh_;
     };
 
-
-
 private:
     Vdmesh *vdmesh_;
     SelectMode mode_;
-    std::set<VertexID> silhouette_;
+    std::set<VertexIndex> silhouette_;
     std::map<VertexID, BitString> *split_map_;
     std::vector<VertexIndex> index_queue_;
+    std::vector<VertexIndex> silhouette_queue_;
 };
 #endif

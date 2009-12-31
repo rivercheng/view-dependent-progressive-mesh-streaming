@@ -97,21 +97,25 @@ void VertexPQ::find_silhouette(unsigned char *pixels, size_t size, int width, st
 void VertexPQ::update(unsigned char* pixels, size_t size, int width)
 {
     //find silhouette
-    std::set<FaceIndex> face_silhouette;
-    find_silhouette(pixels, size, width, face_silhouette);
-    silhouette_.clear();
-    std::set<FaceIndex>::const_iterator it = face_silhouette.begin();
-    std::set<FaceIndex>::const_iterator end = face_silhouette.end();
-    for (; it != end; ++it)
+    if (mode_ == SilhouetteScreen)
     {
-        //std::cerr<<*it<<" " << vdmesh_->face_number() <<std::endl;
-        silhouette_.insert(vdmesh_->index2id((vdmesh_->vertex1_in_face(*it))));
-        silhouette_.insert(vdmesh_->index2id((vdmesh_->vertex2_in_face(*it))));
-        silhouette_.insert(vdmesh_->index2id((vdmesh_->vertex3_in_face(*it))));
+        std::set<FaceIndex> face_silhouette;
+        find_silhouette(pixels, size, width, face_silhouette);
+        silhouette_.clear();
+        std::set<FaceIndex>::const_iterator it = face_silhouette.begin();
+        std::set<FaceIndex>::const_iterator end = face_silhouette.end();
+        for (; it != end; ++it)
+        {
+            //std::cerr<<*it<<" " << vdmesh_->face_number() <<std::endl;
+            silhouette_.insert(vdmesh_->vertex1_in_face(*it));
+            silhouette_.insert(vdmesh_->vertex2_in_face(*it));
+            silhouette_.insert(vdmesh_->vertex3_in_face(*it));
+        }
     }
 
     //sort according to the screen area
     index_queue_.clear();
+    silhouette_queue_.clear();
     stat_screen_area(pixels, size);
     for (size_t i = 0; i <  vdmesh_->vertex_number(); i++)
     {
@@ -126,13 +130,25 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
                 }
             }
             assert(vdmesh_->vertex_importance(i) > 0);
-            index_queue_.push_back(i);
+            if (mode_ != SilhouetteScreen || !in_silhouette(i))
+            {
+                index_queue_.push_back(i);
+            }
+            else
+            {
+                silhouette_queue_.push_back(i);
+            }
         }
     }
     //std::cerr<<"queue size "<<index_queue_.size()<<std::endl;
     if (mode_ == ScreenArea)
     {
         std::make_heap(index_queue_.begin(), index_queue_.end(), CompareArea(vdmesh_));
+    }
+    else if (mode_ == SilhouetteScreen)
+    {
+        std::make_heap(index_queue_.begin(), index_queue_.end(), CompareArea(vdmesh_));
+        std::make_heap(silhouette_queue_.begin(), silhouette_queue_.end(), CompareArea(vdmesh_));
     }
     else if (mode_ == Level)
     {
@@ -147,7 +163,14 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
 VertexIndex VertexPQ::pop()
 {
     VertexID top = 0;
-    if (!index_queue_.empty())
+    if (mode_ == SilhouetteScreen && !silhouette_queue_.empty())
+    {
+        std::pop_heap(silhouette_queue_.begin(), silhouette_queue_.end(), CompareArea(vdmesh_));
+        VertexIndex index = silhouette_queue_.back();
+        top = vdmesh_->index2id(index);
+        silhouette_queue_.pop_back();
+    }
+    else if (!index_queue_.empty())
     {
         if (mode_ == Level)
         {

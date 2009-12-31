@@ -100,10 +100,7 @@ void SilhouetteRender::draw_surface_with_arrays()
             VertexIndex v2 = gfmesh_->vertex2_in_face(i);
             VertexIndex v3 = gfmesh_->vertex3_in_face(i);
             //std::cerr << v1 <<" "<< v2 << " " << v3  << " " << pq_->in_silhouette(gfmesh_->index2id(v1)) <<std::endl;
-            VertexID id1 = gfmesh_->index2id(v1);
-            VertexID id2 = gfmesh_->index2id(v2);
-            VertexID id3 = gfmesh_->index2id(v3);
-            if (pq_->in_silhouette(id1) && pq_->in_silhouette(id2) && pq_->in_silhouette(id3))
+            if (pq_->in_silhouette(v1) && pq_->in_silhouette(v2) && pq_->in_silhouette(v3))
             {
                 glColor3ub(255,0,0);
             }

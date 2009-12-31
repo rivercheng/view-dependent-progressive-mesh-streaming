@@ -45,6 +45,9 @@ ppmesh.o: ppmesh.hh common_def.hh bitstring.hh huffman.hh vertexid.hh
 psnr_mse.o: psnr_mse.hh
 render.o: render.hh baserender.hh vertexid.hh bitstring.hh common_def.hh
 render.o: measure.hh gfmesh.hh vertexpq.hh vdmesh.hh
+silhouette_render.o: silhouette_render.hh vertexid.hh bitstring.hh
+silhouette_render.o: baserender.hh common_def.hh measure.hh psnr_mse.hh
+silhouette_render.o: gfmesh.hh vertexpq.hh vdmesh.hh
 simple_render.o: simple_render.hh vertexid.hh bitstring.hh baserender.hh
 simple_render.o: common_def.hh measure.hh psnr_mse.hh gfmesh.hh vertexpq.hh
 simple_render.o: vdmesh.hh
@@ -57,6 +60,9 @@ test_pq.o: render.hh baserender.hh vertexid.hh bitstring.hh common_def.hh
 test_pq.o: measure.hh vdmesh.hh gfmesh.hh vertexpq.hh
 test_render.o: render.hh baserender.hh vertexid.hh bitstring.hh common_def.hh
 test_render.o: measure.hh gfmesh.hh
+test_silhouette.o: silhouette_render.hh vertexid.hh bitstring.hh
+test_silhouette.o: baserender.hh common_def.hh measure.hh psnr_mse.hh
+test_silhouette.o: gfmesh.hh vertexpq.hh vdmesh.hh
 vertex_by_vertex.o: simple_render.hh vertexid.hh bitstring.hh baserender.hh
 vertex_by_vertex.o: common_def.hh measure.hh psnr_mse.hh gfmesh.hh
 vertex_by_vertex.o: vertexpq.hh vdmesh.hh
