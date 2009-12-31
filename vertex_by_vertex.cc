@@ -5,27 +5,34 @@
 #include <cstdlib>
 int main(int argc, char** argv)
 {
-    SelectMode mode = ScreenArea;
+    SelectMode mode = WeightedScreen;
     int total_count = 0;
     int initial_size = 1;
     int batch_size  = 1;
+    int weight     = 1;
     
-    if (argc < 3)
+    if (argc < 4)
     {
-        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> [mode = 'c': Silhouette + Screen Area | 's':Screen Area | 'l': level | 'r': Random] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
+        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> <mode = 'w': Weighted Screen Area| mode = 's': Silhouette + Screen Area | 'a':Screen Area | 'l': level | 'la': level + Area | 'r': Random> [weight=1] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
         std::cerr << "       total_count = 0 means split all vertex splits."<<std::endl;
         exit(1);
     }
 
-    if (argc > 3)
-    {
-        if (argv[3][0] == 's')
+        if (argv[3][0] == 'a')
         {
             mode = ScreenArea;
         }
-        else if (argv[3][0] == 'c')
+        else if (argv[3][0] == 'w')
+        {
+            mode = WeightedScreen;
+        }
+        else if (argv[3][0] == 's')
         {
             mode = SilhouetteScreen;
+        }
+        else if (argv[3][0] == 'l' && argv[3][1] == 'a')
+        {
+            mode = LevelArea;
         }
         else if (argv[3][0] == 'l')
         {
@@ -35,21 +42,24 @@ int main(int argc, char** argv)
         {
             mode = Random;
         }
-    }
-
     if (argc > 4)
     {
-        total_count = atoi(argv[4]);
+        weight = atoi(argv[4]);
     }
 
     if (argc > 5)
     {
-        initial_size = atoi(argv[5]);
+        total_count = atoi(argv[5]);
     }
 
     if (argc > 6)
     {
-        batch_size = atoi(argv[6]);
+        initial_size = atoi(argv[6]);
+    }
+
+    if (argc > 7)
+    {
+        batch_size = atoi(argv[7]);
     }
 
     std::ifstream ifs(argv[1]);
@@ -140,6 +150,7 @@ int main(int argc, char** argv)
 
     
     VertexPQ pq(&mesh, mode, &vertex_splits);
+    pq.set_silhouette_weight(weight);
     SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, center, &pq, argv[2], initial_size, batch_size, total_count);
     
     //set final image
