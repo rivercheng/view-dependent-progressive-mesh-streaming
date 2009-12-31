@@ -53,7 +53,11 @@ private:
         }
         bool operator()(VertexIndex index1, VertexIndex index2) const
         {
-            return vdmesh_->vertex_importance(index1) < vdmesh_->vertex_importance(index2);
+            // return vdmesh_->vertex_importance(index1) < vdmesh_->vertex_importance(index2);
+            // Now we consider screen area first, and if screen area is the same we compare the level
+            double metric1 = vdmesh_->vertex_importance(index1) * 100 - vdmesh_->id2level(vdmesh_->index2id(index1));
+            double metric2 = vdmesh_->vertex_importance(index2) * 100 - vdmesh_->id2level(vdmesh_->index2id(index2));
+            return metric1 < metric2;
         }
     private:
         Vdmesh *vdmesh_;
