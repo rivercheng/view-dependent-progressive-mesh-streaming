@@ -48,8 +48,69 @@ void VertexPQ::stat_screen_area(unsigned char *pixels, size_t size)
     }
 }
 
-void VertexPQ::update(unsigned char* pixels, size_t size)
+void VertexPQ::find_silhouette(unsigned char *pixels, size_t size, int width, std::set<FaceIndex>& silhouette)
 {
+    int seq_array[1024*768];
+    for (size_t i = 0; i < size; i+=3)
+    {
+        unsigned char color_r = pixels[i];
+        unsigned char color_g = pixels[i+1];
+        unsigned char color_b = pixels[i+2];
+        FaceIndex seq_no = color_r * 65536 + color_g*256 + color_b;
+        seq_array[i/3] = seq_no;
+    }
+
+    for (size_t i = 0; i < size; i++)
+    {
+        if (seq_array[i] == 0)
+        {
+            // Top
+            //std::cerr << "current " << i << " ";
+            if (i >= (size_t)width && seq_array[i-width] != 0)
+            {
+                silhouette.insert(seq_array[i-width]-1);
+                //std::cerr <<" top " << i-width << " " << seq_array[i-width]-1;
+            }
+            //bottom
+            if (i < size - width && seq_array[i+width] != 0)
+            {
+                silhouette.insert(seq_array[i+width]-1);
+                //std::cerr <<" bottom " << i+width << " " << seq_array[i+width]-1;
+            }
+            //left
+            if (i / width * width != i && seq_array[i-1] != 0)
+            {
+                silhouette.insert(seq_array[i-1]-1);
+                //std::cerr <<" left " << i-1 << " " << seq_array[i-1]-1;
+            }
+            //right
+            if ((i+1)/width * width != (i+1) && seq_array[i+1] != 0)
+            {
+                silhouette.insert(seq_array[i+1]-1);
+                //std::cerr <<" right " << i+1 << " " << seq_array[i+1]-1;
+            }
+            //std::cerr << std::endl;
+        }
+    }
+}
+
+void VertexPQ::update(unsigned char* pixels, size_t size, int width)
+{
+    //find silhouette
+    std::set<FaceIndex> face_silhouette;
+    find_silhouette(pixels, size, width, face_silhouette);
+    silhouette_.clear();
+    std::set<FaceIndex>::const_iterator it = face_silhouette.begin();
+    std::set<FaceIndex>::const_iterator end = face_silhouette.end();
+    for (; it != end; ++it)
+    {
+        //std::cerr<<*it<<" " << vdmesh_->face_number() <<std::endl;
+        silhouette_.insert(vdmesh_->index2id((vdmesh_->vertex1_in_face(*it))));
+        silhouette_.insert(vdmesh_->index2id((vdmesh_->vertex2_in_face(*it))));
+        silhouette_.insert(vdmesh_->index2id((vdmesh_->vertex3_in_face(*it))));
+    }
+
+    //sort according to the screen area
     index_queue_.clear();
     stat_screen_area(pixels, size);
     for (size_t i = 0; i <  vdmesh_->vertex_number(); i++)

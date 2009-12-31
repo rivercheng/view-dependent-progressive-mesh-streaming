@@ -12,11 +12,13 @@ test_ppm
 test_render
 test_history
 test_pq
+test_silhouette
 best_image
 vertex_by_vertex
 psnr
 results/
 results2/
+result*
 output*
 temp
 tmp

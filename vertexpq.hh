@@ -33,12 +33,29 @@ public:
      * The content of frame buffer exists in pixels and the size indicates the 
      * size of frame buffer.
      */
-    void update(unsigned char* pixels, size_t size);
+    void update(unsigned char* pixels, size_t size, int width);
+
+    /**
+     * Find the faces contribute to silhouette of a rendered image
+     */
+    void find_silhouette(unsigned char *pixels, size_t size, int width, std::set<FaceIndex>& silhouette);
+
 
     /**
      * pop up the ID of vertex has the highest contribution.
      */
     VertexIndex pop(void);
+
+    /**
+     * To check whether a vertex is in the silhouette
+     */
+    bool in_silhouette(VertexID id)
+    {
+        if (silhouette_.find(id) != silhouette_.end())
+            return true;
+        else
+            return false;
+    }
 
 private:
     void push(VertexID id);
@@ -83,6 +100,7 @@ private:
 private:
     Vdmesh *vdmesh_;
     SelectMode mode_;
+    std::set<VertexID> silhouette_;
     std::map<VertexID, BitString> *split_map_;
     std::vector<VertexIndex> index_queue_;
 };

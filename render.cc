@@ -54,7 +54,7 @@ void Render::check_visibility()
     glReadBuffer(GL_BACK);
     glReadPixels(0,0,width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels_);
     std::cerr<<"update"<<std::endl;
-    pq_->update(pixels_, width_*height_*3);
+    pq_->update(pixels_, width_*height_*3, width_);
     glEnable(GL_LIGHTING);
     glEnable(GL_DITHER);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
