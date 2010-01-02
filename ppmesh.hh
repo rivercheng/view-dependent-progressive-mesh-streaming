@@ -73,7 +73,17 @@ class Ppmesh
      * output all the vertices connected to a given vertex (one-ring neighbor).
      */
     void vertex_vertices(VertexIndex vertex_index, \
-                         std::vector<VertexIndex>& vertex_array) const;
+                         std::vector<VertexIndex>& vertex_array) const
+    {
+        MyMesh::VertexHandle v(vertex_index);
+        MyMesh::ConstVertexVertexIter vv_it(mesh_, v);
+        while (vv_it)
+        {
+            vertex_array.push_back(vv_it.handle().idx());
+            ++vv_it;
+        }
+        return;
+    }
 
     /**
      * output the vertices within a given face to vertex_array.

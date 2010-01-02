@@ -218,3 +218,9 @@ VertexID Gfmesh::to_be_split()
 {
     return ppmesh_->to_be_split();
 }
+
+
+void Gfmesh::vertex_vertices(VertexIndex vertex_index, std::vector<VertexIndex>& vertex_array) const   
+{
+    return ppmesh_->vertex_vertices(vertex_index, vertex_array);
+}

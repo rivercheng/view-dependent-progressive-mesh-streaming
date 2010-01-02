@@ -129,6 +129,7 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
         //std::cerr<<"vertex "<<i<<" "<<" visible: "<<vdmesh_->vertex_is_visible(i)<<" importance "<<vdmesh_->vertex_importance(i)<<std::endl;
         if (vdmesh_->vertex_is_visible(i))
         {
+            //ignore those leave vertices
             if (split_map_ != 0)
             {
                 if (split_map_->find(vdmesh_->index2id(i)) == split_map_->end())
@@ -144,6 +145,39 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
             else
             {
                 silhouette_queue_.push_back(i);
+            }
+
+            //For all vertices in silhouette, we include their invisible neighbors too
+            if (vertex_in_silhouette(i))
+            {
+                std::vector<VertexIndex> neighbors;
+                vdmesh_->vertex_vertices(i, neighbors);
+
+                int importance = vdmesh_->vertex_importance(i);
+                for (std::vector<VertexIndex>::iterator it = neighbors.begin(); it != neighbors.end(); ++it)
+                {
+                    //consider the invisible neighbors of silhouette vertices.
+                    if (! vdmesh_->vertex_is_visible(*it))
+                    {
+                        if (split_map_ != 0)
+                        {
+                            if (split_map_ -> find(vdmesh_->index2id(*it)) == split_map_->end())
+                            {
+                                continue;
+                            }
+                        }
+                        vdmesh_->set_vertex_visibility(*it, true);
+                        vdmesh_->set_vertex_importance(*it, importance);
+                        if (mode_ != SilhouetteScreen)
+                        {
+                            index_queue_.push_back(*it);
+                        }
+                        else
+                        {
+                            silhouette_queue_.push_back(*it);
+                        }
+                    }
+                }
             }
         }
     }

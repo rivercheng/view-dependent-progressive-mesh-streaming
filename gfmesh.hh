@@ -151,6 +151,7 @@ class Gfmesh
         VertexID index2id(VertexIndex index) const;
         VertexIndex id2index(VertexID id) const;
         VertexID to_be_split(void);
+        void vertex_vertices(VertexIndex vertex_index, std::vector<VertexIndex>& vertex_array) const;   
 
 // =====================================PRIVATE================================================================
     private: //variables
