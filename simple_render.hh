@@ -44,16 +44,20 @@ private:
     bool to_check_visibility_;
     bool rendered_;
     std::deque<VertexID> buffer_;
+
+    int  valid_splits_;
     
     virtual void keyboard(unsigned char key, int x, int y);
     virtual void idle(void);
     
     virtual void draw_surface_with_arrays(void);
     
+    void push_buffer(int size);
     void outputImage(std::ostream& os);
     void output_best_image(void);
     void do_main(void);
     void check_visibility(void);
     VertexID next_to_be_split(void);
+    std::map<VertexID, bool> requested_;
 };
 #endif

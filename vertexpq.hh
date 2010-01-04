@@ -40,7 +40,7 @@ public:
     /**
      * pop up the ID of vertex has the highest contribution.
      */
-    VertexIndex pop(void);
+    VertexIndex pop(bool push_children=false);
 
     /**
      * To check whether a vertex is in the silhouette
@@ -75,56 +75,51 @@ public:
 private:
     void push(VertexID id);
     void stat_screen_area(unsigned char *pixels, size_t size);
+    void push_update_heap();
+    void pop_update_heap();
+
+    struct VsInfo
+    {
+        VertexID id;
+        double   importance;
+        int      level;
+        VsInfo(VertexID id_, double importance_, int level_)
+        {
+            id = id_;
+            importance = importance_;
+            level = level_;
+        }
+    };
 
     class CompareArea //: std::binary_function< VertexID, VertexID, bool>
     {
     public:
-        CompareArea(Vdmesh  *vdmesh)
-        {
-            vdmesh_ = vdmesh;
-        }
-        bool operator()(VertexIndex index1, VertexIndex index2) const
+        bool operator()(VsInfo vs1, VsInfo vs2) const
         {
             // return vdmesh_->vertex_importance(index1) < vdmesh_->vertex_importance(index2);
             // Now we consider screen area first, and if screen area is the same we compare the level
-            double metric1 = vdmesh_->vertex_importance(index1) * 100 - vdmesh_->id2level(vdmesh_->index2id(index1));
-            double metric2 = vdmesh_->vertex_importance(index2) * 100 - vdmesh_->id2level(vdmesh_->index2id(index2));
+            double metric1 = vs1.importance * 100 - vs1.level;
+            double metric2 = vs2.importance * 100 - vs2.level;
             return metric1 < metric2;
         }
-    private:
-        Vdmesh *vdmesh_;
     };
 
     class CompareLevel //: std::binary_function< VertexID, VertexID, bool>
     {
     public:
-        CompareLevel(Vdmesh  *vdmesh)
+        bool operator()(VsInfo vs1, VsInfo vs2) const
         {
-            vdmesh_ = vdmesh;
+            return vs1.level > vs2.level;
         }
-        bool operator()(VertexIndex index1, VertexIndex index2) const
-        {
-            return vdmesh_->id2level(vdmesh_->index2id(index1)) > vdmesh_->id2level(vdmesh_->index2id(index2));
-        }
-    private:
-        Vdmesh *vdmesh_;
     };
 
     class CompareLevelArea //: std::binary_function< VertexID, VertexID, bool>
     {
     public:
-        CompareLevelArea(Vdmesh  *vdmesh)
+        bool operator()(VsInfo vs1, VsInfo vs2) const
         {
-            vdmesh_ = vdmesh;
+            return vs1.level * 250000 - vs1.importance   >  vs2.level * 250000 - vs2.importance;
         }
-        bool operator()(VertexIndex index1, VertexIndex index2) const
-        {
-            int level1 = vdmesh_->id2level(vdmesh_->index2id(index1)); 
-            int level2 = vdmesh_->id2level(vdmesh_->index2id(index2));
-            return level1 * 250000 - vdmesh_->vertex_importance(index1) > level2 * 250000 - vdmesh_->vertex_importance(index2);
-        }
-    private:
-        Vdmesh *vdmesh_;
     };
 
     /**
@@ -138,8 +133,10 @@ private:
     std::set<VertexIndex> silhouette_;
     std::set<FaceIndex>   face_in_silhouette_;
     std::map<VertexID, BitString> *split_map_;
-    std::vector<VertexIndex> index_queue_;
-    std::vector<VertexIndex> silhouette_queue_;
-    std::vector<int>         seq_array_;
+    //std::vector<VertexIndex> index_queue_;
+    std::vector<VsInfo>    id_queue_;
+    //std::vector<VertexIndex> silhouette_queue_;
+    std::vector<VsInfo>    silhouette_queue_;
+    std::vector<int>       seq_array_;
 };
 #endif

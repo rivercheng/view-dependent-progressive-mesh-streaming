@@ -121,7 +121,7 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
     }
 
     //sort according to the screen area
-    index_queue_.clear();
+    id_queue_.clear();
     silhouette_queue_.clear();
     stat_screen_area(pixels, size);
     for (size_t i = 0; i <  vdmesh_->vertex_number(); i++)
@@ -130,21 +130,23 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
         if (vdmesh_->vertex_is_visible(i))
         {
             //ignore those leave vertices
+            VertexID id = vdmesh_->index2id(i);
             if (split_map_ != 0)
             {
-                if (split_map_->find(vdmesh_->index2id(i)) == split_map_->end())
+                if (split_map_->find(id) == split_map_->end())
                 {
                     continue;
                 }
             }
-            assert(vdmesh_->vertex_importance(i) > 0);
+            double importance = vdmesh_->vertex_importance(i);
+            assert(importance > 0);
             if (mode_ != SilhouetteScreen || !vertex_in_silhouette(i))
             {
-                index_queue_.push_back(i);
+                id_queue_.push_back(VsInfo(id, importance, vdmesh_->id2level(id)));
             }
             else
             {
-                silhouette_queue_.push_back(i);
+                silhouette_queue_.push_back(VsInfo(id, importance, vdmesh_->id2level(id)));
             }
 
             //For all vertices in silhouette, we include their invisible neighbors too
@@ -159,9 +161,10 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
                     //consider the invisible neighbors of silhouette vertices.
                     if (! vdmesh_->vertex_is_visible(*it))
                     {
+                        VertexID id_s = vdmesh_->index2id(*it);
                         if (split_map_ != 0)
                         {
-                            if (split_map_ -> find(vdmesh_->index2id(*it)) == split_map_->end())
+                            if (split_map_ -> find(id_s) == split_map_->end())
                             {
                                 continue;
                             }
@@ -170,11 +173,11 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
                         vdmesh_->set_vertex_importance(*it, importance);
                         if (mode_ != SilhouetteScreen)
                         {
-                            index_queue_.push_back(*it);
+                            id_queue_.push_back(VsInfo(id_s, importance, vdmesh_->id2level(id_s)));
                         }
                         else
                         {
-                            silhouette_queue_.push_back(*it);
+                            silhouette_queue_.push_back(VsInfo(id_s, importance, vdmesh_->id2level(id_s)));
                         }
                     }
                 }
@@ -184,55 +187,92 @@ void VertexPQ::update(unsigned char* pixels, size_t size, int width)
     //std::cerr<<"queue size "<<index_queue_.size()<<std::endl;
     if (mode_ == ScreenArea)
     {
-        std::make_heap(index_queue_.begin(), index_queue_.end(), CompareArea(vdmesh_));
+        std::make_heap(id_queue_.begin(), id_queue_.end(), CompareArea());
     }
     else if (mode_ == SilhouetteScreen || mode_ == WeightedScreen)
     {
-        std::make_heap(index_queue_.begin(), index_queue_.end(), CompareArea(vdmesh_));
-        std::make_heap(silhouette_queue_.begin(), silhouette_queue_.end(), CompareArea(vdmesh_));
+        std::make_heap(id_queue_.begin(), id_queue_.end(), CompareArea());
+        std::make_heap(silhouette_queue_.begin(), silhouette_queue_.end(), CompareArea());
     }
     else if (mode_ == Level)
     {
-        std::make_heap(index_queue_.begin(), index_queue_.end(), CompareLevel(vdmesh_));
+        std::make_heap(id_queue_.begin(), id_queue_.end(), CompareLevel());
     }
     else if (mode_ == LevelArea)
     {
-        std::make_heap(index_queue_.begin(), index_queue_.end(), CompareLevelArea(vdmesh_));
+        std::make_heap(id_queue_.begin(), id_queue_.end(), CompareLevelArea());
     }
     else 
     {
-        std::random_shuffle(index_queue_.begin(), index_queue_.end());
+        std::random_shuffle(id_queue_.begin(), id_queue_.end());
     }
 }
 
-VertexIndex VertexPQ::pop()
+void VertexPQ::push_update_heap()
 {
-    VertexID top = 0;
+    if (mode_ == Level)
+    {
+        std::push_heap(id_queue_.begin(), id_queue_.end(), CompareLevel());
+    }
+    else if (mode_ == LevelArea)
+    {
+        std::push_heap(id_queue_.begin(), id_queue_.end(), CompareLevelArea());
+    }
+    else if (mode_ == ScreenArea || mode_ == WeightedScreen)
+    {
+        std::push_heap(id_queue_.begin(), id_queue_.end(), CompareArea());
+    }
+}
+
+void VertexPQ::pop_update_heap()
+{
+    if (mode_ == Level)
+    {
+        std::pop_heap(id_queue_.begin(), id_queue_.end(), CompareLevel());
+    }
+    else if (mode_ == LevelArea)
+    {
+        std::pop_heap(id_queue_.begin(), id_queue_.end(), CompareLevelArea());
+    }
+    else if (mode_ == ScreenArea || mode_ == WeightedScreen)
+    {
+        std::pop_heap(id_queue_.begin(), id_queue_.end(), CompareArea());
+    }
+}
+
+VertexIndex VertexPQ::pop(bool push_children)
+{
+    VsInfo top(0, 0, 0);
     if (mode_ == SilhouetteScreen && !silhouette_queue_.empty())
     {
-        std::pop_heap(silhouette_queue_.begin(), silhouette_queue_.end(), CompareArea(vdmesh_));
-        VertexIndex index = silhouette_queue_.back();
-        top = vdmesh_->index2id(index);
+        std::pop_heap(silhouette_queue_.begin(), silhouette_queue_.end(), CompareArea());
+        top = silhouette_queue_.back();
         silhouette_queue_.pop_back();
     }
-    else if (!index_queue_.empty())
+    else if (!id_queue_.empty())
     {
-        if (mode_ == Level)
-        {
-            std::pop_heap(index_queue_.begin(), index_queue_.end(), CompareLevel(vdmesh_));
-        }
-        if (mode_ == LevelArea)
-        {
-            std::pop_heap(index_queue_.begin(), index_queue_.end(), CompareLevelArea(vdmesh_));
-        }
-        else if (mode_ == ScreenArea || mode_ == WeightedScreen)
-        {
-            std::pop_heap(index_queue_.begin(), index_queue_.end(), CompareArea(vdmesh_));
-        }
-        VertexIndex index = index_queue_.back();
-        top = vdmesh_->index2id(index);
-        index_queue_.pop_back();
+        pop_update_heap();
+        top = id_queue_.back();
+        id_queue_.pop_back();
         //std::cerr << top << " " << index << " " << vdmesh_->vertex_importance(index) << std::endl;
     }
-    return top;
+    if (push_children)
+    {
+        VsInfo child1((top.id) << 1, top.importance / 2, top.level + 1);
+        VsInfo child2(((top.id) << 1) + 1, top.importance / 2, top.level + 1);
+        if (split_map_ && split_map_->find(child1.id) != split_map_->end())
+        {
+            id_queue_.push_back(child1);
+            push_update_heap();
+            //std::cerr << "push " << child1.id << " importance " << child1.importance << std::endl;
+        }
+        if (split_map_ && split_map_->find(child2.id) != split_map_->end())
+        {
+            id_queue_.push_back(child2);
+            push_update_heap();
+            //std::cerr << "push " << child2.id << " importance " << child2.importance << std::endl;
+        }
+    }
+    //std::cerr << "pop " << top.id << " importance " << top.importance << std::endl;
+    return top.id;
 }

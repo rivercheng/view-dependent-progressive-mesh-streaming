@@ -158,9 +158,40 @@ VertexID SimpleRender::next_to_be_split()
     VertexID id = gfmesh_->to_be_split();
     if (id == 0) // No pending splits
     {
-        id = pq_->pop();
+        id = pq_->pop(true);
     }
     return id;
+}
+
+void SimpleRender::push_buffer(int n)
+{
+    int i = 0;
+    while(i < n)
+    {
+        VertexID id = next_to_be_split();
+        //if (id == 0) break;
+        if (id == 0)
+        {
+            if (valid_splits_ > 0)
+            {
+                buffer_.push_back(id);
+                i++;
+            }
+            else
+            {
+                exit(0);
+            }
+        }
+        else if (batch_size_ <= 1 || requested_.find(id) == requested_.end() || !requested_[id])
+        {
+            buffer_.push_back(id);
+            //std::cerr << "pushed " << id << std::endl;
+            requested_[id] = true;
+            valid_splits_ ++;
+            i++;
+        }
+    }
+    std::cerr<<"pushed. Now valid: "<<valid_splits_<<std::endl;
 }
 
 void SimpleRender::do_main()
@@ -186,68 +217,71 @@ void SimpleRender::do_main()
         if (count_ == 0)
         {
             //initial step
-            for (int i = 0; i < initial_size_; i++)
-            {
-                VertexID id = next_to_be_split();
-                if (id == 0) break;
-                buffer_.push_back(id);
-            }
+            push_buffer(initial_size_);
             for (int i = 0; i < batch_size_; i++)
             {
                 if (buffer_.empty())
                 {
-                    if (i == 0)
-                        exit(0);
-                    else
-                        break;
+                    exit(0);
                 }
-                VertexID id = buffer_.front();
+                id_ = buffer_.front();
                 buffer_.pop_front();
-                size_t pos = 0;
-                BitString bs = split_map_[id];
-                gfmesh_->decode(id, bs, &pos);
+                if (id_ == 0)
+                {
+                    bs_size_ = 0;
+                }
+                else
+                {
+                    size_t pos = 0;
+                    BitString bs = split_map_[id_];
+                    gfmesh_->decode(id_, bs, &pos);
+                    bs_size_ = bs.size();
+                    total_bs_size_ += bs_size_;
+                    valid_splits_ --;
+                }
                 count_ ++;
-                id_ = id;
-                bs_size_ = bs.size();
-                total_bs_size_ += bs_size_;
                 std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
                 std::cout << total_bs_size_ << " " << psnr_ << " " << error_count_ << "\n";
             }
         }
         else
         {
-            for (int i = 0; i < batch_size_; i++)
-            {
-                VertexID id = next_to_be_split();
-                if (id == 0) break;
-                buffer_.push_back(id);
-            }
-
+            push_buffer(batch_size_);
             for (int i = 0; i < batch_size_; i++)
             {
                 if (count_ > total_count_) 
                 {
                     exit(0);
                 }
-                if (buffer_.empty()) 
+                if (buffer_.empty())
                 {
-                    if (i == 0)
-                        exit(0);
-                    else
-                        break;
+                    exit(0);
                 }
-                VertexID id = buffer_.front();
+                id_ = buffer_.front();
+                //std::cerr << "id " << id_ << std::endl;
                 buffer_.pop_front();
-                size_t pos = 0;
-                BitString bs = split_map_[id];
-                gfmesh_->decode(id, bs, &pos);
+                if (id_ == 0) 
+                {
+                    bs_size_ = 0;
+                }
+                else
+                {
+                    size_t pos = 0;
+                    if (split_map_.find(id_) == split_map_.end())
+                    {
+                        std::cerr << "invalid id to split: " << id_ << std::endl;
+                    }
+                    BitString bs = split_map_[id_];
+                    gfmesh_->decode(id_, bs, &pos);
+                    bs_size_ = bs.size();
+                    total_bs_size_ += bs_size_;
+                    valid_splits_ --;
+                }
                 count_ ++;
-                id_ = id;
-                bs_size_ = bs.size();
-                total_bs_size_ += bs_size_;
                 std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
                 std::cout << total_bs_size_ / 8 << " " << psnr_ << " " << error_count_ << "\n";
             }
+            std::cerr <<"valid "<<valid_splits_<<std::endl;
         }
         gfmesh_->update();
         
@@ -261,7 +295,7 @@ SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfm
         :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), split_map_(split_map), pq_(pq), prefix_(prefix), initial_size_(initial_size), batch_size_(batch_size), total_count_(total_count), \
          count_(0), id_(0), bs_size_(0), total_bs_size_(0), psnr_(0), error_count_(0), \
          original_pixels_(0), max_value_(255), \
-        to_output_(true), to_check_visibility_(false), rendered_(false)
+        to_output_(true), to_check_visibility_(false), rendered_(false), valid_splits_(0)
 {
     if (pq_ != 0)
     {
