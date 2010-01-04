@@ -158,7 +158,7 @@ VertexID SimpleRender::next_to_be_split()
     VertexID id = gfmesh_->to_be_split();
     if (id == 0) // No pending splits
     {
-        id = pq_->pop(true);
+        id = pq_->pop();
     }
     return id;
 }
@@ -191,7 +191,7 @@ void SimpleRender::push_buffer(int n)
             i++;
         }
     }
-    std::cerr<<"pushed. Now valid: "<<valid_splits_<<std::endl;
+    //std::cerr<<"pushed. Now valid: "<<valid_splits_<<std::endl;
 }
 
 void SimpleRender::do_main()
@@ -281,7 +281,7 @@ void SimpleRender::do_main()
                 std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
                 std::cout << total_bs_size_ / 8 << " " << psnr_ << " " << error_count_ << "\n";
             }
-            std::cerr <<"valid "<<valid_splits_<<std::endl;
+            //std::cerr <<"valid "<<valid_splits_<<std::endl;
         }
         gfmesh_->update();
         

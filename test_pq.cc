@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
     mesh.update();
     Center center = auto_center(mesh.vertex_number(), mesh.vertex_array());
-    VertexPQ pq(&mesh, ScreenArea);
+    VertexPQ pq(&mesh, ScreenArea, true);
     Render render(argc, argv, argv[1], &mesh, 60, center, &pq);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();

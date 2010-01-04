@@ -2,8 +2,8 @@
 #include <algorithm>
 
 
-VertexPQ::VertexPQ(Vdmesh *vdmesh, SelectMode mode, std::map<VertexID, BitString> *split_map)
-        :vdmesh_(vdmesh), mode_(mode), silhouette_weight_(1), split_map_(split_map) 
+VertexPQ::VertexPQ(Vdmesh *vdmesh, SelectMode mode, bool push_children, std::map<VertexID, BitString> *split_map)
+        :vdmesh_(vdmesh), mode_(mode), silhouette_weight_(1), split_map_(split_map), push_children_(push_children)
 {
     std::cerr <<"mode " << mode_ << std::endl;
 }
@@ -240,7 +240,7 @@ void VertexPQ::pop_update_heap()
     }
 }
 
-VertexIndex VertexPQ::pop(bool push_children)
+VertexIndex VertexPQ::pop()
 {
     VsInfo top(0, 0, 0);
     if (mode_ == SilhouetteScreen && !silhouette_queue_.empty())
@@ -256,7 +256,7 @@ VertexIndex VertexPQ::pop(bool push_children)
         id_queue_.pop_back();
         //std::cerr << top << " " << index << " " << vdmesh_->vertex_importance(index) << std::endl;
     }
-    if (push_children)
+    if (push_children_)
     {
         VsInfo child1((top.id) << 1, top.importance / 2, top.level + 1);
         VsInfo child2(((top.id) << 1) + 1, top.importance / 2, top.level + 1);

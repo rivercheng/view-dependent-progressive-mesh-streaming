@@ -10,10 +10,11 @@ int main(int argc, char** argv)
     int initial_size = 1;
     int batch_size  = 1;
     int weight     = 1;
+    bool push_children = true;
     
-    if (argc < 4)
+    if (argc < 5)
     {
-        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> <mode = 'w': Weighted Screen Area| mode = 's': Silhouette + Screen Area | 'a':Screen Area | 'l': level | 'la': level + Area | 'r': Random> [weight=1] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
+        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> <mode = 'w': Weighted Screen Area| mode = 's': Silhouette + Screen Area | 'a':Screen Area | 'l': level | 'la': level + Area | 'r': Random> <push_child: y/n> [weight=1] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
         std::cerr << "       total_count = 0 means split all vertex splits."<<std::endl;
         exit(1);
     }
@@ -42,24 +43,40 @@ int main(int argc, char** argv)
         {
             mode = Random;
         }
-    if (argc > 4)
+
+    if (argv[4][0] == 'y' or argv[4][0] == 'Y')
     {
-        weight = atoi(argv[4]);
+        push_children = true;
     }
+    else if (argv[4][0] == 'n' or argv[4][0] == 'N')
+    {
+        push_children = false;
+    }
+    else 
+    {
+        std::cerr << "push child has to be 'y' or 'n'." << std::endl;
+        exit(1);
+    }
+
 
     if (argc > 5)
     {
-        total_count = atoi(argv[5]);
+        weight = atoi(argv[5]);
     }
 
     if (argc > 6)
     {
-        initial_size = atoi(argv[6]);
+        total_count = atoi(argv[6]);
     }
 
     if (argc > 7)
     {
-        batch_size = atoi(argv[7]);
+        initial_size = atoi(argv[7]);
+    }
+
+    if (argc > 8)
+    {
+        batch_size = atoi(argv[8]);
     }
 
     std::ifstream ifs(argv[1]);
@@ -149,7 +166,7 @@ int main(int argc, char** argv)
     std::cerr << "force split" << std::endl;
 
     
-    VertexPQ pq(&mesh, mode, &vertex_splits);
+    VertexPQ pq(&mesh, mode, push_children, &vertex_splits);
     pq.set_silhouette_weight(weight);
     SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, center, &pq, argv[2], initial_size, batch_size, total_count);
     

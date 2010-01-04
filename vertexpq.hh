@@ -19,7 +19,7 @@ public:
     /**
      * Constructor from pointers to ppmesh and gfmesh.
      */
-    VertexPQ(Vdmesh *vdmesh, SelectMode mode, std::map<VertexID, BitString> *split_map = 0);
+    VertexPQ(Vdmesh *vdmesh, SelectMode mode, bool push_children, std::map<VertexID, BitString> *split_map = 0);
 
     /**
      * destructor.
@@ -40,7 +40,7 @@ public:
     /**
      * pop up the ID of vertex has the highest contribution.
      */
-    VertexIndex pop(bool push_children=false);
+    VertexIndex pop(void);
 
     /**
      * To check whether a vertex is in the silhouette
@@ -138,5 +138,6 @@ private:
     //std::vector<VertexIndex> silhouette_queue_;
     std::vector<VsInfo>    silhouette_queue_;
     std::vector<int>       seq_array_;
+    bool   push_children_;
 };
 #endif
