@@ -9,13 +9,14 @@ int main(int argc, char** argv)
     int total_count = 0;
     int initial_size = 1;
     int batch_size  = 1;
+    int update_period = 1;
     int weight     = 1;
     bool push_children = true;
     
     if (argc < 5)
     {
-        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> <mode = 'w': Weighted Screen Area| mode = 's': Silhouette + Screen Area | 'a':Screen Area | 'l': level | 'la': level + Area | 'r': Random> <push_child: y/n> [weight=1] [total_count=0] [initial_size=1] [batch_size=1]"<<std::endl;
-        std::cerr << "       total_count = 0 means split all vertex splits."<<std::endl;
+        std::cerr << "Usage: "<<argv[0]<<" <ppm file> <view point and history> <mode = 'w': Weighted Screen Area| mode = 's': Silhouette + Screen Area | 'a':Screen Area | 'l': level | 'la': level + Area | 'r': Random> <push_child: y/n> [weight=1] [total_count=0] [initial_size=1] [batch_size=1] [update_period=1]"<<std::endl;
+        std::cerr << "       total_count = 0 means split all vertex splits. The update period should be a multiple of batch size."<<std::endl;
         exit(1);
     }
 
@@ -43,7 +44,7 @@ int main(int argc, char** argv)
         {
             mode = Random;
         }
-
+    
     if (argv[4][0] == 'y' or argv[4][0] == 'Y')
     {
         push_children = true;
@@ -77,6 +78,17 @@ int main(int argc, char** argv)
     if (argc > 8)
     {
         batch_size = atoi(argv[8]);
+    }
+
+    if (argc > 9)
+    {
+        update_period = atoi(argv[9]);
+    }
+
+    if (update_period / batch_size * batch_size != update_period)
+    {
+        std::cerr<<"update period should be a multiple of batch size."<<std::endl;
+        exit(1);
     }
 
     std::ifstream ifs(argv[1]);
@@ -168,7 +180,7 @@ int main(int argc, char** argv)
     
     VertexPQ pq(&mesh, mode, push_children, &vertex_splits);
     pq.set_silhouette_weight(weight);
-    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, center, &pq, argv[2], initial_size, batch_size, total_count);
+    SimpleRender render(argc, argv, argv[1], &mesh, vertex_splits, center, &pq, argv[2], initial_size, batch_size, update_period, total_count);
     
     //set final image
     std::string prefix = std::string(argv[2]);

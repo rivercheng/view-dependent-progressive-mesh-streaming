@@ -196,8 +196,9 @@ void SimpleRender::push_buffer(int n)
 
 void SimpleRender::do_main()
 {
-    int image_step  = 100;
+    int image_step  = 200;
     static int last_image = 0;
+    static bool first = true;
     if (rendered_)
     {
         //std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
@@ -214,11 +215,11 @@ void SimpleRender::do_main()
         }
         to_output_ = true;
 
-        if (count_ == 0)
+        if (first)
         {
             //initial step
             push_buffer(initial_size_);
-            for (int i = 0; i < batch_size_; i++)
+            /*for (int i = 0; i < batch_size_; i++)
             {
                 if (buffer_.empty())
                 {
@@ -241,12 +242,12 @@ void SimpleRender::do_main()
                 }
                 count_ ++;
                 std::cout << count_ << " " << id_ << " " << bs_size_ << " ";
-                std::cout << total_bs_size_ << " " << psnr_ << " " << error_count_ << "\n";
-            }
+                std::cout << total_bs_size_  / 8 << " " << psnr_ << " " << error_count_ << "\n";
+            }*/
+            first = false;
         }
         else
         {
-            push_buffer(batch_size_);
             for (int i = 0; i < batch_size_; i++)
             {
                 if (count_ > total_count_) 
@@ -270,6 +271,7 @@ void SimpleRender::do_main()
                     if (split_map_.find(id_) == split_map_.end())
                     {
                         std::cerr << "invalid id to split: " << id_ << std::endl;
+                        exit(1);
                     }
                     BitString bs = split_map_[id_];
                     gfmesh_->decode(id_, bs, &pos);
@@ -282,17 +284,22 @@ void SimpleRender::do_main()
                 std::cout << total_bs_size_ / 8 << " " << psnr_ << " " << error_count_ << "\n";
             }
             //std::cerr <<"valid "<<valid_splits_<<std::endl;
+            //std::cerr <<"one round "<<count_<<std::endl;
+            push_buffer(batch_size_);
         }
         gfmesh_->update();
         
         rendered_ = false;
-        to_check_visibility_ = true;
+        if (count_ / update_period_ * update_period_ == count_)
+        {
+            to_check_visibility_ = true;
+        }
         glutPostRedisplay();
     }
 }
 
-SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfmesh, std::map<VertexID, BitString>& split_map, const Center& center, VertexPQ *pq, std::string prefix, int initial_size, int batch_size, int total_count) 
-        :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), split_map_(split_map), pq_(pq), prefix_(prefix), initial_size_(initial_size), batch_size_(batch_size), total_count_(total_count), \
+SimpleRender::SimpleRender(int argc, char *argv[], const char *name, Vdmesh *gfmesh, std::map<VertexID, BitString>& split_map, const Center& center, VertexPQ *pq, std::string prefix, int initial_size, int batch_size, int update_period, int total_count) 
+        :BaseRender(argc, argv, name, false), gfmesh_(gfmesh), split_map_(split_map), pq_(pq), prefix_(prefix), initial_size_(initial_size), batch_size_(batch_size), update_period_(update_period), total_count_(total_count), \
          count_(0), id_(0), bs_size_(0), total_bs_size_(0), psnr_(0), error_count_(0), \
          original_pixels_(0), max_value_(255), \
         to_output_(true), to_check_visibility_(false), rendered_(false), valid_splits_(0)

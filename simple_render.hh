@@ -17,7 +17,8 @@ class BitString;
 class SimpleRender : public BaseRender
 {
 public:
-    SimpleRender(int argc, char *argv[], const char *name, Vdmesh *mesh, std::map<VertexID, BitString>& split_map, const Center& center, VertexPQ *pq, std::string prefix, int initial_size, int batch_size_, int total_count);
+    SimpleRender(int argc, char *argv[], const char *name, Vdmesh *mesh, std::map<VertexID, BitString>& split_map, const Center& center, VertexPQ *pq, std::string prefix, \
+            int initial_size, int batch_size_,   int update_period, int total_count);
     void set_original_image(const std::string& pgm_file);
     
 private:
@@ -29,6 +30,7 @@ private:
 
     int initial_size_;
     int batch_size_;
+    int update_period_;
     int total_count_;
 
     int    count_;
