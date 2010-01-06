@@ -15,14 +15,9 @@ def one_round(prefix):
     
     init_size = 10000
     batch_size = 200 
-    update_period = 10000
+    update_period = 200 
     weight = 1
     output_file = prefix+"output_buddha_%d_%d_push_new" % (update_period, weight)
-    directory = prefix+"res_push_%d_%d_%d_%d" % (init_size, batch_size, update_period, weight)
-    run("yes", "w", 0)
-
-    batch_size = 10000 
-    output_file = prefix+"output_buddha_%d_%d_push_new2" % (update_period, weight)
     directory = prefix+"res_push_%d_%d_%d_%d" % (init_size, batch_size, update_period, weight)
     run("yes", "w", 0)
 history_file = "buddha_view_point"
