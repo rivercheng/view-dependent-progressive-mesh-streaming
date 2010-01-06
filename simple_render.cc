@@ -248,6 +248,7 @@ void SimpleRender::do_main()
         }
         else
         {
+            push_buffer(batch_size_);
             for (int i = 0; i < batch_size_; i++)
             {
                 if (count_ > total_count_) 
@@ -285,13 +286,13 @@ void SimpleRender::do_main()
             }
             //std::cerr <<"valid "<<valid_splits_<<std::endl;
             //std::cerr <<"one round "<<count_<<std::endl;
-            push_buffer(batch_size_);
         }
         gfmesh_->update();
         
         rendered_ = false;
         if (count_ / update_period_ * update_period_ == count_)
         {
+            std::cerr << count_ << std::endl;
             to_check_visibility_ = true;
         }
         glutPostRedisplay();
