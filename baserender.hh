@@ -27,17 +27,30 @@ public:
         view_y_ = center_y;
         view_z_ = center_z + distance;
     }
+
+    int round(double x)
+    {
+        if (x >= 0)
+        {
+            return int(x+0.5);
+        }
+        else
+        {
+            return int(x-0.5);
+        }
+    }
     
     void setView(double dx, double dy, double dz, double angle_x,\
                  double angle_y, double angle_z, double scale)
     {
-        dx_ = dx / step_x_;
-        dy_ = dy / step_y_;
-        dz_ = dz / step_z_;
+        dx_ = round(dx / step_x_);
+        dy_ = round(dy / step_y_);
+        dz_ = round(dz / step_z_);
         angle_x_ = angle_x;
         angle_z_ = angle_z;
         angle_y_ = angle_y;
         scale_   = scale;
+        std::cerr<<"dx_ "<<dx_<<" dy_ "<<dy_ <<" dz_ "<<dz_ <<std::endl;
     }
 
     void setSmooth(bool value)

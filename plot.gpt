@@ -1,0 +1,94 @@
+set terminal postscript enhanced
+set size 0.6
+
+set output "vp1_push_nopush.eps"
+set xlabel "time"
+set ylabel "psnr"
+set xr [0:160000]
+set xtics 40000
+plot "output_buddha_1_1_nopush" using 1:5 title "vertex by vertex" with lines, \
+     "output_buddha_200_1_nopush" using 1:5 title "update every 200 splits, existed only" with lines, \
+     "output_buddha_10000_1_nopush" using 1:5 every 10000 title "update every 10000 splits, existed only" with lines, \
+     "output_buddha_200_1_push" using 1:5 with lines title "update every 200 splits, considering children", \
+     "output_buddha_10000_1_push" using 1:5 every 10000 title "update every 10000 splits, considering children" with lines
+
+set output "vp2_push_nopush.eps"
+set xr [0:80000]
+set xtics 20000
+plot "vp2_output_buddha_1_1_nopush" using 1:5 title "vertex by vertex" with lines, \
+     "vp2_output_buddha_200_1_nopush" using 1:5 title "update every 200 splits, existed only" with lines, \
+     "vp2_output_buddha_10000_1_nopush" using 1:5 every 10000 title "update every 10000 splits, existed only" with lines, \
+     "vp2_output_buddha_200_1_push" using 1:5 with lines title "update every 200 splits, considering children", \
+     "vp2_output_buddha_10000_1_push" using 1:5 every 10000 title "update every 10000 splits, considering children" with lines
+
+set output "vp3_push_nopush.eps"
+set xr [0:40000]
+set xtics 10000
+plot "vp3_output_buddha_1_1_nopush" using 1:5 title "vertex by vertex" with lines, \
+     "vp3_output_buddha_200_1_nopush" using 1:5 title "update every 200 splits, existed only" with lines, \
+     "vp3_output_buddha_10000_1_nopush" using 1:5 every 10000 title "update every 10000 splits, existed only" with lines, \
+     "vp3_output_buddha_200_1_push" using 1:5 with lines title "update every 200 splits, considering children", \
+     "vp3_output_buddha_10000_1_push" using 1:5 every 10000 title "update every 10000 splits, considering children" with lines
+
+set output "his1_push_nopush.eps"
+set xr [0:80000]
+set xtics 20000
+plot "his1_output_buddha_1_1_nopush" using 1:5 title "vertex by vertex" with lines, \
+     "his1_output_buddha_200_1_nopush" using 1:5 title "update every 200 splits, existed only" with lines, \
+     "his1_output_buddha_10000_1_nopush" using 1:5 every 10000 title "update every 10000 splits, existed only" with lines, \
+     "his1_output_buddha_200_1_push" using 1:5 with lines title "update every 200 splits, considering children", \
+     "his1_output_buddha_10000_1_push" using 1:5 every 10000 title "update every 10000 splits, considering children" with lines
+
+set output "his2_push_nopush.eps"
+set xr [0:80000]
+set xtics 20000
+plot "his2_output_buddha_1_1_nopush" using 1:5 title "vertex by vertex" with lines, \
+     "his2_output_buddha_200_1_nopush" using 1:5 title "update every 200 splits, existed only" with lines, \
+     "his2_output_buddha_10000_1_nopush" using 1:5 every 10000 title "update every 10000 splits, existed only" with lines, \
+     "his2_output_buddha_200_1_push" using 1:5 with lines title "update every 200 splits, considering children", \
+     "his2_output_buddha_10000_1_push" using 1:5 every 10000 title "update every 10000 splits, considering children" with lines
+
+set xr [0:160000]
+set xtics 40000
+set output "vp1_weight_level.eps"
+plot "output_buddha_200_1_push" using 1:5 title "weight 1" with lines, \
+     "output_buddha_200_3_push" using 1:5 with lines title "weight 3", \
+     "output_buddha_200_5_push" using 1:5 with lines title "weight 5", \
+     "output_buddha_200_l_push" using 1:5 with lines title "level based", \
+     "output_buddha_200_r_push" using 1:5 with lines title "random"
+
+set xr [0:80000]
+set xtics 20000
+set output "vp2_weight_level.eps"
+plot "vp2_output_buddha_200_1_push" using 1:5 title "weight 1" with lines, \
+     "vp2_output_buddha_200_3_push" using 1:5 with lines title "weight 3", \
+     "vp2_output_buddha_200_5_push" using 1:5 with lines title "weight 5", \
+     "vp2_output_buddha_200_l_push" using 1:5 with lines title "level based", \
+     "vp2_output_buddha_200_r_push" using 1:5 with lines title "random"
+
+set xr [0:40000]
+set xtics 10000
+set output "vp3_weight_level.eps"
+plot "vp3_output_buddha_200_1_push" using 1:5 title "weight 1" with lines, \
+     "vp3_output_buddha_200_3_push" using 1:5 with lines title "weight 3", \
+     "vp3_output_buddha_200_5_push" using 1:5 with lines title "weight 5", \
+     "vp3_output_buddha_200_l_push" using 1:5 with lines title "level based", \
+     "vp3_output_buddha_200_r_push" using 1:5 with lines title "random"
+
+set xr [0:160000]
+set xtics 40000
+set output "his1_weight_level.eps"
+plot "his1_output_buddha_200_1_push" using 1:5 title "weight 1" with lines, \
+     "his1_output_buddha_200_3_push" using 1:5 with lines title "weight 3", \
+     "his1_output_buddha_200_5_push" using 1:5 with lines title "weight 5", \
+     "his1_output_buddha_200_l_push" using 1:5 with lines title "level based", \
+     "his1_output_buddha_200_r_push" using 1:5 with lines title "random"
+
+set xr [0:160000]
+set xtics 40000
+set output "his2_weight_level.eps"
+plot "his2_output_buddha_200_1_push" using 1:5 title "weight 1" with lines, \
+     "his2_output_buddha_200_3_push" using 1:5 with lines title "weight 3", \
+     "his2_output_buddha_200_5_push" using 1:5 with lines title "weight 5", \
+     "his2_output_buddha_200_l_push" using 1:5 with lines title "level based", \
+     "his2_output_buddha_200_r_push" using 1:5 with lines title "random"

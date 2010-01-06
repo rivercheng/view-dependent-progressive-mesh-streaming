@@ -11,6 +11,7 @@ int main(int argc, char** argv)
     }
     std::ifstream ifs(argv[1]);
     Gfmesh gfmesh(ifs);
+    Center center = auto_center(gfmesh.vertex_number(), gfmesh.vertex_array());
     size_t count = gfmesh.n_detail_vertices();
     double dx = 0;
     double dy = 0;
@@ -42,7 +43,6 @@ int main(int argc, char** argv)
     }
     gfmesh.update();
 
-    Center center = auto_center(gfmesh.vertex_number(), gfmesh.vertex_array());
     Render render(argc, argv, argv[1], &gfmesh, 60, center);
     render.setView(dx, dy, dz, ax, ay, az, scale);
     render.enterMainLoop();

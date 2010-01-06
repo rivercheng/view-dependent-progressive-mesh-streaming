@@ -197,6 +197,7 @@ void Render::keyboard(unsigned char key, int, int)
         break;
     case 'V':
     case 'v':
+        std::cerr<<" dy " << dy_ << " " << dy_ * step_y_ <<" " <<std::endl;
         ofs.open("view_points", std::ios::app);
         ofs<<dx_*step_x_<<" "<<dy_*step_y_<<" "<<dz_*step_z_<<" " \
         <<angle_x_<<" "<<angle_y_<<" "<< \
