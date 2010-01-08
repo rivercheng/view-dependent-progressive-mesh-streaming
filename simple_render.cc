@@ -196,7 +196,7 @@ void SimpleRender::push_buffer(int n)
 
 void SimpleRender::do_main()
 {
-    int image_step  = 200;
+    int image_step  = 1000;
     static int last_image = 0;
     static bool first = true;
     if (rendered_)
@@ -292,7 +292,7 @@ void SimpleRender::do_main()
         rendered_ = false;
         if (count_ / update_period_ * update_period_ == count_)
         {
-            std::cerr << count_ << std::endl;
+            //std::cerr << count_ << std::endl;
             to_check_visibility_ = true;
         }
         glutPostRedisplay();
