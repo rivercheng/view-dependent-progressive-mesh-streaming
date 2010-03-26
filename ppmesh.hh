@@ -6,8 +6,8 @@
 #ifndef __PPMESH_HH__
 #define __PPMESH_HH__
 
-#include <OpenMesh/Core/Mesh/Types/TriMesh_ArrayKernelT.hh>
-#include <OpenMesh/Core/Attributes/Attributes.hh>
+#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+#include <OpenMesh/Core/Mesh/Attributes.hh>
 #include <OpenMesh/Core/Utils/Endian.hh>
 #include <vector>
 #include <set>
@@ -145,7 +145,7 @@ class Ppmesh
                        OpenMesh::Attributes::Status);
         VertexTraits
         {
-        public:
+            public:
             // the id to represent the position in the binary trees.
             unsigned int id;
             unsigned int level;

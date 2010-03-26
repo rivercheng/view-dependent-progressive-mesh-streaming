@@ -1,5 +1,5 @@
-LIBRARY = -lOpenMesh_Core #-lprofiler#-lOpenMesh_Tools -lPocoFoundation -lPocoNet -lPocoUtil -lglut #-lprofiler	
-OPTIONS =  -Wall -W -Wextra -g -O2 
+LIBRARY = -lOpenMeshCore #-lprofiler#-lOpenMesh_Tools -lPocoFoundation -lPocoNet -lPocoUtil -lglut #-lprofiler	
+OPTIONS =  -Wall -W -Wextra -g -O2 -L/usr/local/lib/OpenMesh
 CC = g++
 ALL = test_ppmesh test_gfmesh test_ppm test_render test_history test_pq best_image vertex_by_vertex psnr test_silhouette
 OBJ = ppmesh.o bitstring.o vertexid.o common_def.o gfmesh.o vertexpq.o measure.o

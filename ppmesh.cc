@@ -216,8 +216,10 @@ void Ppmesh::readPM(std::istream& ifs)
         OpenMesh::IO::binary<MyMesh::Point>::restore(ifs, p, swap);
         v = mesh_.add_vertex(p);
         VertexID id = i + leading_one;
-        mesh_.deref(v).id = id;
-        mesh_.deref(v).level = 0;
+        //mesh_.data(v).id = id;
+        mesh_.data(v).id = id;
+        //mesh_.data(v).level = 0;
+        mesh_.data(v).level = 0;
         map_[id].v = v.idx();
     }
 
@@ -443,17 +445,19 @@ bool Ppmesh::splitVs(splitInfo split)
 
     // MyMesh::VertexHandle v1 = split->v;
     MyMesh::VertexHandle v1(map_[split.id].v);
-    DEBUG(mesh_.deref(v1).id);
-    if (mesh_.deref(v1).id != split.id)
+    //DEBUG(mesh_.data(v1).id);
+    DEBUG(mesh_.data(v1).id);
+    //if (mesh_.data(v1).id != split.id)
+    if (mesh_.data(v1).id != split.id)
     {
-        if (mesh_.deref(v1).id / split.id * split.id == mesh_.deref(v1).id)
+        if (mesh_.data(v1).id / split.id * split.id == mesh_.data(v1).id)
         {
             return true; //the vertex is already split
         }
         else
         {
-            std::cerr<< mesh_.deref(v1).id << " " <<split.id<<std::endl;
-            assert(mesh_.deref(v1).id == split.id);
+            std::cerr<< mesh_.data(v1).id << " " <<split.id<<std::endl;
+            assert(mesh_.data(v1).id == split.id);
         }
     }
 
@@ -562,8 +566,8 @@ bool Ppmesh::splitVs(splitInfo split)
 
     VertexID id0 = (id << 1) + 1;
     VertexID id1 = (id << 1);
-    mesh_.deref(v0).id = id0;
-    mesh_.deref(v1).id = id1;
+    mesh_.data(v0).id = id0;
+    mesh_.data(v1).id = id1;
     map_[id0].v = v0.idx();
     map_[id1].v = v1.idx();
 
@@ -614,7 +618,8 @@ size_t Ppmesh::one_ring_neighbor(const MyMesh::VertexHandle& v1, \
     MyMesh::ConstVertexVertexIter vv_it(mesh_, v1);
     while (vv_it)
     {
-        neighbors.push_back(vv_it->id);
+        //neighbors.push_back(vv_it->id);
+        neighbors.push_back(mesh_.data(vv_it.handle()).id);
         ++vv_it;
         neighbor_number++;
     }
@@ -837,8 +842,8 @@ void Ppmesh::copyMesh(MyMesh& dst) const
     {
         MyMesh::Point p = mesh_.point(v_it);
         MyMesh::VertexHandle v = dst.add_vertex(p);
-        dst.deref(v).id = mesh_.deref(v).id;
-        dst.deref(v).level = mesh_.deref(v).level;
+        dst.data(v).id = mesh_.data(v).id;
+        dst.data(v).level = mesh_.data(v).level;
     }
 
     MyMesh::ConstFaceIter f_it(mesh_.faces_begin());
@@ -869,7 +874,7 @@ void Ppmesh::set_report_arrays(
 VertexID Ppmesh::index2id(VertexIndex index) const
 {
     MyMesh::VertexHandle vh(index);
-    return mesh_.deref(vh).id;
+    return mesh_.data(vh).id;
 }
 
 VertexIndex Ppmesh::id2index(VertexID id) const
